@@ -12,13 +12,13 @@ cornersH = [topLeftH, topRightH, botRightH, botLeftH];
 corners = [cornersH(1,:)./cornersH(3,:); cornersH(2,:)./cornersH(3,:)];
 
 % compute transformed image limits in world coordinates
-minX = min(corners(1,:));
-maxX = max(corners(1,:));
-minY = min(cornersH(2,:));
-maxY = max(corners(2,:));
+minX = floor(min(corners(1,:)));
+maxX = ceil(max(corners(1,:)));
+minY = floor(min(cornersH(2,:)));
+maxY = ceil(max(corners(2,:)));
 
-dstWidth = ceil(maxX-minX);
-dstHeight = ceil(maxY-minY);
+dstWidth = maxX-minX+1;
+dstHeight = maxY-minY+1;
 
 % compute mapping from dst pixels in world coordinates to src pixels
 [dstX, dstY] = meshgrid(minX:maxX, minY:maxY);
