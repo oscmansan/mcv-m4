@@ -21,9 +21,9 @@ I = imresize(I,0.5);
 
 theta = 5/180*pi;
 scale = 0.5;
-translation_vector = [10,20];
-H = [scale*cos(theta),  scale*-sin(theta),  translation_vector(1);
-     scale*sin(theta),  scale*cos(theta),  translation_vector(2);
+trans = [10,20];
+H = [scale*cos(theta),  scale*-sin(theta),  trans(1);
+     scale*sin(theta),  scale*cos(theta),  trans(2);
      0,  0,  1];
 
 I2 = apply_H(I, H);
@@ -47,9 +47,9 @@ figure; imshow(I); figure; imshow(uint8(I2));
 theta = 30/180*pi;
 phi = 15/180*pi;
 scale = 0.5;
-translation_vector = [10,20];
-H = [scale*(cos(theta)*cos(phi)-sin(theta)*sin(phi)),  scale*(-cos(theta)*sin(phi)-sin(theta)*cos(phi)),  scale*translation_vector(1)*(cos(theta)*cos(phi)-sin(theta)*sin(phi))+scale*translation_vector(2)*(-cos(theta)*sin(phi)-sin(theta)*cos(phi));
-     scale*(sin(theta)*cos(phi)+cos(theta)*sin(phi)),  scale*(-sin(theta)*sin(phi)+cos(theta)*cos(phi)),  scale*translation_vector(1)*(sin(theta)*cos(phi)+cos(theta)*sin(phi))+scale*translation_vector(2)*(-sin(theta)*sin(phi)+cos(theta)*cos(phi));
+trans = [10,20];
+H = [scale*(cos(theta)*cos(phi)-sin(theta)*sin(phi)),  scale*(-cos(theta)*sin(phi)-sin(theta)*cos(phi)),  scale*trans(1)*(cos(theta)*cos(phi)-sin(theta)*sin(phi))+scale*trans(2)*(-cos(theta)*sin(phi)-sin(theta)*cos(phi));
+     scale*(sin(theta)*cos(phi)+cos(theta)*sin(phi)),  scale*(-sin(theta)*sin(phi)+cos(theta)*cos(phi)),  scale*trans(1)*(sin(theta)*cos(phi)+cos(theta)*sin(phi))+scale*trans(2)*(-sin(theta)*sin(phi)+cos(theta)*cos(phi));
      0,  0,  1];
 
 I2 = apply_H(I, H);
@@ -70,8 +70,8 @@ Hscale = [scale,  0,  0;
           0,  scale,  0;
           0,  0,  1];
 
-Htrans = [1,  0,  translation_vector(1);
-          0,  1,  translation_vector(2);
+Htrans = [1,  0,  trans(1);
+          0,  1,  trans(2);
           0,  0,  1];
 
 % ToDo: verify that the product of the four previous transformations
@@ -92,7 +92,7 @@ I3 = apply_H(I3, Hscale);
 I3 = apply_H(I3, Htrans);
 figure; imshow(uint8(I3));
 
-% TODO: Aquí hauríem de comparar numèricament les dues imatges
+% TODO: Aquï¿½ haurï¿½em de comparar numï¿½ricament les dues imatges
 
 %% 1.3 Projective transformations (homographies)
 

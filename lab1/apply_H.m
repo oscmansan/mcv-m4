@@ -1,40 +1,37 @@
-function [I2] = apply_H(I,H)
+function I2 = apply_H(I,H)
 
 I = double(I);
-[height, width, nChannels] = size(I);
+[numRows, numCols, numChannels] = size(I);
 
-% TODO: Calcular la mida del resultat (Aquí està posat dummy)
-height2 = height;
-width2 = width;
+% compute transformed image corners in world coordinates
+topLeftH = H * [1; 1; 1];
+topRightH = H * [numCols; 1; 1];
+botRightH = H * [numCols; numRows; 1];
+botLeftH = H * [1; numRows; 1];
+cornersH = [topLeftH, topRightH, botRightH, botLeftH];
+corners = [cornersH(1,:)./cornersH(3,:); cornersH(2,:)./cornersH(3,:)];
 
-% Initialize final image
-I2 = zeros(height2,width2,nChannels);
+% compute transformed image limits in world coordinates
+minX = min(corners(1,:));
+maxX = max(corners(1,:));
+minY = min(cornersH(2,:));
+maxY = max(corners(2,:));
 
-% Define initial set of points
-[X,Y] = meshgrid(1:width,1:height); % MATLAB gira la X i la Y sembla ser
+dstWidth = round(maxX-minX);
+dstHeight = round(maxY-minY);
 
-% Initialize final set of points
-[X2,Y2] = meshgrid(1:width2,1:height2);
+% compute mapping from dst pixels in world coordinates to src pixels
+[dstX, dstY] = meshgrid(minX:maxX, minY:maxY);
+dstPointsH = [dstX(:).'; dstY(:).'; ones(1, dstWidth*dstHeight)];
+%srcPoints = inv(H) * dstPointsH;
+srcPointsH = H\dstPointsH;  % faster
+srcX = reshape(srcPointsH(1,:)./srcPointsH(3,:), [dstHeight,dstWidth]);
+srcY = reshape(srcPointsH(2,:)./srcPointsH(3,:), [dstHeight,dstWidth]);
 
-% Compute final set of points
-for i = 1:height2
-    for j = 1:width2
-        p2_point = [i;j;1];
-        new_p2_point = H\p2_point; % Inverse matrix multiplication
-        new_r2_point = new_p2_point(1:2)/new_p2_point(3);
-        if (new_r2_point(1) < 0 || new_r2_point(1) > height || new_r2_point(2) < 0 || new_r2_point(2) > width)
-            X2(i,j) = 0;
-            Y2(i,j) = 0;
-        else
-            X2(i,j) = new_r2_point(2);
-            Y2(i,j) = new_r2_point(1);
-        end
-    end
-end
-
-% Assign values to final pixels
-for nChannel=1:nChannels
-    I2(:,:,nChannel)=interp2(X,Y,I(:,:,nChannel),X2,Y2);
+% copy values from src pixels to dst pixels in intrinsic coordinates
+I2 = zeros(dstHeight, dstWidth, numChannels);
+for k = 1:numChannels
+    I2(:,:,k) = interp2(I(:,:,k), srcX, srcY);
 end
 
 end
