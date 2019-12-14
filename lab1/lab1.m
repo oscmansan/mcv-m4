@@ -15,7 +15,6 @@
 
 %% 1.1. Similarities
 I=imread('Data/0005_s.png'); % we have to be in the proper folder
-I = imresize(I,0.5);
 
 % ToDo: generate a matrix H which produces a similarity transformation
 
