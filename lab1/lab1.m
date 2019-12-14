@@ -15,7 +15,6 @@
 
 %% 1.1. Similarities
 I=imread('Data/0005_s.png'); % we have to be in the proper folder
-I = imresize(I,0.5);
 
 % ToDo: generate a matrix H which produces a similarity transformation
 
@@ -93,8 +92,6 @@ I3 = apply_H(I3, Hrot2);
 I3 = apply_H(I3, Hscale);
 I3 = apply_H(I3, Htrans);
 figure; imshow(uint8(I3));
-
-% TODO: Aqu? haur?em de comparar num?ricament les dues imatges
 
 %% 1.3 Projective transformations (homographies)
 
