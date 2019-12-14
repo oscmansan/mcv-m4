@@ -48,8 +48,8 @@ theta = 30/180*pi;
 phi = 15/180*pi;
 scale = 0.5;
 trans = [10,20];
-H = [scale*(cos(theta)*cos(phi)-sin(theta)*sin(phi)),  scale*(-cos(theta)*sin(phi)-sin(theta)*cos(phi)),  scale*trans(1)*(cos(theta)*cos(phi)-sin(theta)*sin(phi))+scale*trans(2)*(-cos(theta)*sin(phi)-sin(theta)*cos(phi));
-     scale*(sin(theta)*cos(phi)+cos(theta)*sin(phi)),  scale*(-sin(theta)*sin(phi)+cos(theta)*cos(phi)),  scale*trans(1)*(sin(theta)*cos(phi)+cos(theta)*sin(phi))+scale*trans(2)*(-sin(theta)*sin(phi)+cos(theta)*cos(phi));
+H = [scale*(cos(theta)*cos(phi)-sin(theta)*sin(phi)),  scale*(-cos(theta)*sin(phi)-sin(theta)*cos(phi)),  trans(1);
+     scale*(sin(theta)*cos(phi)+cos(theta)*sin(phi)),  scale*(-sin(theta)*sin(phi)+cos(theta)*cos(phi)),  trans(2);
      0,  0,  1];
 
 I2 = apply_H(I, H);
@@ -74,13 +74,15 @@ Htrans = [1,  0,  trans(1);
           0,  1,  trans(2);
           0,  0,  1];
 
+H2 = Htrans*Hscale*Hrot2*Hrot1;
+
 % ToDo: verify that the product of the four previous transformations
 % produces the same matrix H as above
 
-if sum(sum(Hrot1*Hrot2*Hscale*Htrans-H)) < 1e-10 % Can't correctly compare floating points directly
+if sum(sum(H2-H)) < 1e-10 % Can't correctly compare floating points directly
     display('CORRECT MATRIX DECOMPOSITION')
 else
-    display('WRONG MATRIX DECOMPOSITION')
+    display('INCORRECT MATRIX DECOMPOSITION')
 end
 
 % ToDo: verify that the proper sequence of the four previous
@@ -92,7 +94,7 @@ I3 = apply_H(I3, Hscale);
 I3 = apply_H(I3, Htrans);
 figure; imshow(uint8(I3));
 
-% TODO: Aqu� haur�em de comparar num�ricament les dues imatges
+% TODO: Aqu? haur?em de comparar num?ricament les dues imatges
 
 %% 1.3 Projective transformations (homographies)
 
@@ -181,6 +183,5 @@ plot(t, -(lr4(1)*t + lr4(3)) / lr4(2), 'y');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 5. OPTIONAL: Metric Rectification in a single step
 % Use 5 pairs of orthogonal lines (pages 55-57, Hartley-Zisserman book)
-
 
 
