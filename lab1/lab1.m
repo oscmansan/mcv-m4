@@ -96,10 +96,16 @@ figure; imshow(uint8(I3));
 %% 1.3 Projective transformations (homographies)
 
 % ToDo: generate a matrix H which produces a projective transformation
-Hproj = H;
-Hproj(3,:)=[0, 0.003, 1];
 
-I2 = apply_H(I, Hproj);
+theta = 10/180*pi;
+phi = 5/180*pi;
+scale = 0.75;
+trans = [40,10];
+H = [scale*(cos(theta)*cos(phi)-sin(theta)*sin(phi)),  scale*(-cos(theta)*sin(phi)-sin(theta)*cos(phi)),  trans(1);
+     scale*(sin(theta)*cos(phi)+cos(theta)*sin(phi)),  scale*(-sin(theta)*sin(phi)+cos(theta)*cos(phi)),  trans(2);
+     0,  0.0005,  1];
+
+I2 = apply_H(I, H);
 figure; imshow(I); figure; imshow(uint8(I2));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -144,14 +150,14 @@ v1 = cross(l1,l2);
 v1p = [v1(1)/v1(3), v1(2)/v1(3)];
 v2 = cross(l3,l4);
 v2p = [v2(1)/v2(3), v2(2)/v2(3)];
-
+ 
 linf = get_line_from_points(v1p, v2p); % in euclidian
 % convert to homogeneous
 last_position = linf(3);
 linf = linf/linf(3);
-
+ 
 Hproj_inf = [1 0 0; 0 1 0; linf];
-
+ 
 I2 = apply_H(I, Hproj_inf);
 figure; imshow(uint8(I2));
 
@@ -180,6 +186,83 @@ plot(t, -(lr4(1)*t + lr4(3)) / lr4(2), 'y');
 %       the metric rectification) with the chosen lines printed on it.
 %       Compute also the angles between the pair of lines before and after
 %       rectification.
+
+% choose the image points
+I=imread('Data/0001_s.png');
+A = load('Data/0001_s_info_lines.txt');
+
+% indices of lines
+i = 511;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+i = 802;
+p3 = [A(i,1) A(i,2) 1]';
+p4 = [A(i,3) A(i,4) 1]';
+i = 614;
+p5 = [A(i,1) A(i,2) 1]';
+p6 = [A(i,3) A(i,4) 1]';
+i = 541;
+p7 = [A(i,1) A(i,2) 1]';
+p8 = [A(i,3) A(i,4) 1]';
+
+% compute the lines l1, l2, l3, l4, that pass through the different pairs of points
+l1 = get_line_from_points(p1,p2);
+l2 = get_line_from_points(p3,p4);
+l3 = get_line_from_points(p5,p6);
+l4 = get_line_from_points(p7,p8);
+
+% show the chosen lines in the image
+figure;imshow(I);
+hold on;
+t=1:0.1:1000;
+plot(t, -(l1(1)*t + l1(3)) / l1(2), 'y');
+plot(t, -(l2(1)*t + l2(3)) / l2(2), 'y');
+plot(t, -(l3(1)*t + l3(3)) / l3(2), 'y');
+plot(t, -(l4(1)*t + l4(3)) / l4(2), 'y');
+
+% compute angle between pairs of lines before rectification
+theta_init_l1_l2 = get_angle_between_two_lines(l1,l2)/pi*180;
+theta_init_l3_l4 = get_angle_between_two_lines(l3,l4)/pi*180;
+
+% compute the homography that metrically rectifies the image
+l = l1;
+m = l2;
+k = l3;
+n = l4;
+A = [l(1)*m(1),  l(1)*m(2)+l(2)*m(1),  l(2)*m(2);
+     k(1)*n(1),  k(1)*n(2)+k(2)*n(1),  k(2)*n(2)];
+S = null(A);
+S = [S(1),S(2);S(2),S(3)];
+K = chol(S);
+K = inv(K);
+H = [K(1,1),K(1,2),0;
+     K(2,1),K(2,2),0;
+     0,0,1];
+
+I2 = apply_H(I, H);
+figure; imshow(uint8(I2));
+
+% compute the transformed lines lr1, lr2, lr3, lr4
+lr1 = (H.')\(l1.');
+lr2 = (H.')\(l2.');
+lr3 = (H.')\(l3.');
+lr4 = (H.')\(l4.');
+
+% show the transformed lines in the transformed image
+figure;imshow(uint8(I2));
+hold on;
+t=1:0.1:10000;
+plot(t, -(lr1(1)*t + lr1(3)) / lr1(2), 'y');
+plot(t, -(lr2(1)*t + lr2(3)) / lr2(2), 'y');
+plot(t, -(lr3(1)*t + lr3(3)) / lr3(2), 'y');
+plot(t, -(lr4(1)*t + lr4(3)) / lr4(2), 'y');
+
+% compute angle between pairs of lines after rectification
+theta_fin_l1_l2 = get_angle_between_two_lines(lr1,lr2)/pi*180;
+theta_fin_l3_l4 = get_angle_between_two_lines(lr3,lr4)/pi*180;
+
+disp(['Angle between l1 and l2 before rectification:',num2str(theta_init_l1_l2),' - and after rectification:',num2str(theta_fin_l1_l2)])
+disp(['Angle between l3 and l4 before rectification:',num2str(theta_init_l3_l4),' - and after rectification:',num2str(theta_fin_l3_l4)])
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 4. Affine and Metric Rectification of the left facade of image 0001
