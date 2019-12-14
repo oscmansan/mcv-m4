@@ -97,14 +97,14 @@ figure; imshow(uint8(I3));
 %% 1.3 Projective transformations (homographies)
 
 % ToDo: generate a matrix H which produces a projective transformation
+Hproj = H;
+Hproj(3,:)=[0, 0.003, 1];
 
-I2 = apply_H(I, H);
+I2 = apply_H(I, Hproj);
 figure; imshow(I); figure; imshow(uint8(I2));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 2. Affine Rectification
-
-
 % choose the image points
 I=imread('Data/0000_s.png');
 A = load('Data/0000_s_info_lines.txt');
@@ -124,6 +124,10 @@ p7 = [A(i,1) A(i,2) 1]';
 p8 = [A(i,3) A(i,4) 1]';
 
 % ToDo: compute the lines l1, l2, l3, l4, that pass through the different pairs of points
+l1 = get_line_from_points(p1,p2);
+l2 = get_line_from_points(p3,p4);
+l3 = get_line_from_points(p5,p6);
+l4 = get_line_from_points(p7,p8);
 
 
 % show the chosen lines in the image
