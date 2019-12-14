@@ -17,8 +17,8 @@ maxX = max(corners(1,:));
 minY = min(cornersH(2,:));
 maxY = max(corners(2,:));
 
-dstWidth = round(maxX-minX);
-dstHeight = round(maxY-minY);
+dstWidth = ceil(maxX-minX);
+dstHeight = ceil(maxY-minY);
 
 % compute mapping from dst pixels in world coordinates to src pixels
 [dstX, dstY] = meshgrid(minX:maxX, minY:maxY);
