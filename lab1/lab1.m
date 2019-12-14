@@ -80,9 +80,9 @@ H2 = Htrans*Hscale*Hrot2*Hrot1;
 % produces the same matrix H as above
 
 if sum(sum(H2-H)) < 1e-10 % Can't correctly compare floating points directly
-    display('CORRECT MATRIX DECOMPOSITION')
+    disp('CORRECT MATRIX DECOMPOSITION')
 else
-    display('INCORRECT MATRIX DECOMPOSITION')
+    disp('INCORRECT MATRIX DECOMPOSITION')
 end
 
 % ToDo: verify that the proper sequence of the four previous
@@ -143,7 +143,19 @@ plot(t, -(l4(1)*t + l4(3)) / l4(2), 'y');
 
 % ToDo: compute the homography that affinely rectifies the image
 
-I2 = apply_H(I, H);
+v1 = cross(l1,l2);
+v1p = [v1(1)/v1(3), v1(2)/v1(3)];
+v2 = cross(l3,l4);
+v2p = [v2(1)/v2(3), v2(2)/v2(3)];
+
+linf = get_line_from_points(v1p, v2p); % in euclidian
+% convert to homogeneous
+last_position = linf(3);
+linf = linf/linf(3);
+
+Hproj_inf = [1 0 0; 0 1 0; linf];
+
+I2 = apply_H(I, Hproj_inf);
 figure; imshow(uint8(I2));
 
 % ToDo: compute the transformed lines lr1, lr2, lr3, lr4
