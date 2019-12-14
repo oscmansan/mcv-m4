@@ -93,8 +93,6 @@ I3 = apply_H(I3, Hscale);
 I3 = apply_H(I3, Htrans);
 figure; imshow(uint8(I3));
 
-% TODO: Aqu? haur?em de comparar num?ricament les dues imatges
-
 %% 1.3 Projective transformations (homographies)
 
 % ToDo: generate a matrix H which produces a projective transformation
