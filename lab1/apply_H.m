@@ -12,10 +12,10 @@ cornersH = [topLeftH, topRightH, botRightH, botLeftH];
 corners = [cornersH(1,:)./cornersH(3,:); cornersH(2,:)./cornersH(3,:)];
 
 % compute transformed image limits in world coordinates
-minX = floor(min(corners(1,:)));
-maxX = ceil(max(corners(1,:)));
-minY = floor(min(cornersH(2,:)));
-maxY = ceil(max(corners(2,:)));
+minX = ceil(min(corners(1,:)));
+maxX = floor(max(corners(1,:)));
+minY = ceil(min(cornersH(2,:)));
+maxY = floor(max(corners(2,:)));
 
 dstWidth = maxX-minX+1;
 dstHeight = maxY-minY+1;

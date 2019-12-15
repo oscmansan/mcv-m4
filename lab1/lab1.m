@@ -19,12 +19,12 @@ clc;
 I=imread('Data/0005_s.png'); % we have to be in the proper folder
 
 % ToDo: generate a matrix H which produces a similarity transformation
-
-theta = 5/180*pi;
-scale = 0.5;
-trans = [10,20];
-H = [scale*cos(theta),  scale*-sin(theta),  trans(1);
-     scale*sin(theta),  scale*cos(theta),  trans(2);
+theta = 30/180*pi;
+R = [cos(theta), -sin(theta); sin(theta), cos(theta)];
+s = 0.5;
+t = [10,20];
+H = [s*R(1,1),  s*R(1,2),  t(1);
+     s*R(2,1),  s*R(2,2),  t(2);
      0,  0,  1];
 
 I2 = apply_H(I, H);
@@ -34,23 +34,10 @@ figure; imshow(I); figure; imshow(uint8(I2));
 %% 1.2. Affinities
 
 % ToDo: generate a matrix H which produces an affine transformation
-
-% PROVA INICIAL
-% vert_angle_rotation = 50/180*pi;
-% hor_angle_rotation = 5/180*pi;
-% vertical_scaling = 1;
-% horizontal_scaling = 0.5;
-% translation_vector = [10,20];
-% H = [vertical_scaling*cos(vert_angle_rotation),  horizontal_scaling*-sin(hor_angle_rotation),  translation_vector(1);
-%      vertical_scaling*sin(vert_angle_rotation),  horizontal_scaling*cos(hor_angle_rotation),  translation_vector(2);
-%      0,  0,  1];
-
-theta = 30/180*pi;
-phi = 15/180*pi;
-scale = 0.5;
-trans = [10,20];
-H = [scale*(cos(theta)*cos(phi)-sin(theta)*sin(phi)),  scale*(-cos(theta)*sin(phi)-sin(theta)*cos(phi)),  trans(1);
-     scale*(sin(theta)*cos(phi)+cos(theta)*sin(phi)),  scale*(-sin(theta)*sin(phi)+cos(theta)*cos(phi)),  trans(2);
+A = [0.5, -0.25; 0.25, 0.5];
+t = [10,20];
+H = [A(1,1),  A(1,2),  t(1);
+     A(2,1),  A(2,2),  t(2);
      0,  0,  1];
 
 I2 = apply_H(I, H);
@@ -58,57 +45,54 @@ figure; imshow(I); figure; imshow(uint8(I2));
 
 % ToDo: decompose the affinity in four transformations: two
 % rotations, a scale, and a translation
+[U,D,V] = svd(A);  % A = (U*V')*(V*D*V') = R1*R2'*D*R2
+R1 = U*V';
+R2 = V';
 
-Hrot1 = [cos(theta),  -sin(theta),  0;
-         sin(theta),  cos(theta),  0;
-         0,  0,  1];
-
-Hrot2 = [cos(phi),  -sin(phi),  0;
-         sin(phi),  cos(phi),  0;
-         0,  0,  1];
-
-Hscale = [scale,  0,  0;
-          0,  scale,  0;
-          0,  0,  1];
-
-Htrans = [1,  0,  trans(1);
-          0,  1,  trans(2);
-          0,  0,  1];
-
-H2 = Htrans*Hscale*Hrot2*Hrot1;
+Hrot1 = [R1(1,1), R1(1,2), 0;
+         R1(2,1), R1(2,2), 0;
+         0, 0, 1];
+     
+Hrot2 = [R2(1,1), R2(1,2), 0;
+         R2(2,1), R2(2,2), 0;
+         0, 0, 1];
+     
+Hscale = [D(1,1), D(1,2), 0;
+          D(2,1), D(2,2), 0;
+          0, 0, 1];
+      
+Htrans = [1, 0, t(1);
+          0, 1, t(2);
+          0, 0, 1];
 
 % ToDo: verify that the product of the four previous transformations
 % produces the same matrix H as above
-
-if sum(sum(H2-H)) < 1e-10 % Can't correctly compare floating points directly
-    disp('CORRECT MATRIX DECOMPOSITION')
-else
-    disp('INCORRECT MATRIX DECOMPOSITION')
-end
+H2 = Htrans*Hrot1*Hrot2'*Hscale*Hrot2;
+assert(max(abs(H2-H),[],'all') < 1e-10);
 
 % ToDo: verify that the proper sequence of the four previous
 % transformations over the image I produces the same image I2 as before
-
-I3 = apply_H(I, Hrot1);
-I3 = apply_H(I3, Hrot2);
+I3 = apply_H(I, Hrot2);
 I3 = apply_H(I3, Hscale);
+I3 = apply_H(I3, Hrot2');
+I3 = apply_H(I3, Hrot1);
 I3 = apply_H(I3, Htrans);
-figure; imshow(uint8(I3));
+figure; imshow(uint8(I3));  % the result is blurrier due to successive interpolations
+
 
 %% 1.3 Projective transformations (homographies)
 
 % ToDo: generate a matrix H which produces a projective transformation
-
-theta = 10/180*pi;
-phi = 5/180*pi;
-scale = 0.75;
-trans = [40,10];
-H = [scale*(cos(theta)*cos(phi)-sin(theta)*sin(phi)),  scale*(-cos(theta)*sin(phi)-sin(theta)*cos(phi)),  trans(1);
-     scale*(sin(theta)*cos(phi)+cos(theta)*sin(phi)),  scale*(-sin(theta)*sin(phi)+cos(theta)*cos(phi)),  trans(2);
-     0,  0.0005,  1];
+A = [0.5, -0.25; 0.25, 0.5];
+t = [10,20];
+v = [0,0.0005];
+H = [A(1,1),  A(1,2),  t(1);
+     A(2,1),  A(2,2),  t(2);
+     v(1),  v(2),  1];
 
 I2 = apply_H(I, H);
 figure; imshow(I); figure; imshow(uint8(I2));
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 2. Affine Rectification
@@ -142,11 +126,11 @@ l6 = get_line_from_points(p2, p3);
 % show the chosen lines in the image
 figure;imshow(I);
 hold on;
-t=1:0.1:1000;
-plot(t, -(l1(1)*t + l1(3)) / l1(2), 'y');
-plot(t, -(l2(1)*t + l2(3)) / l2(2), 'y');
-plot(t, -(l3(1)*t + l3(3)) / l3(2), 'y');
-plot(t, -(l4(1)*t + l4(3)) / l4(2), 'y');
+trans=1:0.1:1000;
+plot(trans, -(l1(1)*trans + l1(3)) / l1(2), 'y');
+plot(trans, -(l2(1)*trans + l2(3)) / l2(2), 'y');
+plot(trans, -(l3(1)*trans + l3(3)) / l3(2), 'y');
+plot(trans, -(l4(1)*trans + l4(3)) / l4(2), 'y');
 
 % ToDo: compute the homography that affinely rectifies the image
 
