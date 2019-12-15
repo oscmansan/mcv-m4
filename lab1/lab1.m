@@ -172,6 +172,9 @@ angle_lr1_lr2 = angle_between_lines(lr1,lr2)/pi*180;
 angle_l3_l4 = angle_between_lines(l3,l4)/pi*180;
 angle_lr3_lr4 = angle_between_lines(lr3,lr4)/pi*180;
 
+angle_l1_l3 = angle_between_lines(l1,l3)/pi*180;
+angle_l2_l4 = angle_between_lines(l2,l4)/pi*180;
+
 fprintf('Angle between (l1, l2): %.2f -> %.2f\n', angle_l1_l2, angle_lr1_lr2);
 fprintf('Angle between (l3, l4): %.2f -> %.2f\n', angle_l3_l4, angle_lr3_lr4);
 
@@ -214,16 +217,16 @@ S = [sol(1) sol(2); sol(2) 1];
 R = chol(inv(S));
 
 Ha = [R [0;0]; 0 0 1];
-H3 = Ha*Hproj_inf;
+H3 = Ha*Hpa;
 I3 = apply_H(I, H3);
 
 % compute the lines from the transformed points
-lr1 = (H3.')\(l1.');
-lr2 = (H3.')\(l2.');
-lr3 = (H3.')\(l3.');
-lr4 = (H3.')\(l4.');
-lr5 = (H3.')\(l5.');
-lr6 = (H3.')\(l6.');
+lr1 = H3'\l1;
+lr2 = H3'\l2;
+lr3 = H3'\l3;
+lr4 = H3'\l4;
+lr5 = H3'\l5;
+lr6 = H3'\l6;
 
 lr1 = [lr1(1) / lr1(3), lr1(2)/lr1(3), 1];
 lr2 = [lr2(1) / lr2(3), lr2(2)/lr2(3), 1];
@@ -249,6 +252,7 @@ theta_fin_l3_l4 = angle_between_lines(lr3,lr4)/pi*180;
 theta_fin_l1_l3 = angle_between_lines(lr1,lr3)/pi*180;
 theta_fin_l2_l4 = angle_between_lines(lr2,lr4)/pi*180;
 
+
 disp('Angles after metric rectification:')
 
 disp(['Angle between l1 and l2 before transformation (parallel): ', num2str(theta_init_l1_l2),' - after transformation: ', num2str(theta_fin_l1_l2)])
@@ -256,10 +260,10 @@ disp(['Angle between l3 and l4 before transformation (parallel): ', num2str(thet
 disp(['Angle between l1 and l3 before transformation (orthogonal): ', num2str(theta_init_l1_l3),' - after transformation: ', num2str(theta_fin_l1_l3)])
 disp(['Angle between l2 and l4 before transformation (orthogonal): ', num2str(theta_init_l2_l4),' - after transformation: ', num2str(theta_fin_l2_l4)])
 
-disp(['Angle between l1 and l2 before rectification (parallel): ', num2str(theta_l1_l2),' - after rectification: ', num2str(theta_fin_l1_l2)])
-disp(['Angle between l3 and l4 before rectification (parallel): ', num2str(theta_l3_l4),' - after rectification: ', num2str(theta_fin_l3_l4)])
-disp(['Angle between l1 and l3 before rectification (orthogonal): ', num2str(theta_l1_l3),' - after rectification: ', num2str(theta_fin_l1_l3)])
-disp(['Angle between l2 and l4 before rectification (orthogonal): ', num2str(theta_l2_l4),' - after rectification: ', num2str(theta_fin_l2_l4)])
+disp(['Angle between l1 and l2 before rectification (parallel): ', num2str(angle_l1_l2),' - after rectification: ', num2str(theta_fin_l1_l2)])
+disp(['Angle between l3 and l4 before rectification (parallel): ', num2str(angle_l3_l4),' - after rectification: ', num2str(theta_fin_l3_l4)])
+disp(['Angle between l1 and l3 before rectification (orthogonal): ', num2str(angle_l1_l3),' - after rectification: ', num2str(theta_fin_l1_l3)])
+disp(['Angle between l2 and l4 before rectification (orthogonal): ', num2str(angle_l2_l4),' - after rectification: ', num2str(theta_fin_l2_l4)])
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 4. Affine and Metric Rectification of the left facade of image 0001
@@ -295,10 +299,10 @@ p8 = [A(i,3) A(i,4) 1]';
 
 % compute the lines l1, l2, l3, l4, that pass through the different pairs of points
 
-l1 = get_line_from_points(p1,p2);
-l2 = get_line_from_points(p3,p4);
-l3 = get_line_from_points(p5,p6);
-l4 = get_line_from_points(p7,p8);
+l1 = cross(p1,p2);
+l2 = cross(p3,p4);
+l3 = cross(p5,p6);
+l4 = cross(p7,p8);
 
 % Crossed lines
 p9 = cross(l1, l3);
@@ -322,25 +326,23 @@ plot(t, -(l6(1)*t + l6(3)) / l6(2), 'y');
 % ToDo: compute the homography that affinely rectifies the image
 
 v1 = cross(l1,l2);
-v1p = [v1(1)/v1(3), v1(2)/v1(3)];
 v2 = cross(l3,l4);
-v2p = [v2(1)/v2(3), v2(2)/v2(3)];
  
-linf = get_line_from_points(v1p, v2p);
+linf = cross(v1, v2);
 linf = linf/linf(3);
 
-Hproj_inf = [1 0 0; 0 1 0; linf];
+Hpa = [1 0 0; 0 1 0; linf'];
  
-I2 = apply_H(I, Hproj_inf);
+I2 = apply_H(I, Hpa);
 figure; imshow(uint8(I2));
 
 % ToDo: compute the transformed lines lr1, lr2, lr3, lr4
-lr1 = (Hproj_inf.')\(l1.');
-lr2 = (Hproj_inf.')\(l2.');
-lr3 = (Hproj_inf.')\(l3.');
-lr4 = (Hproj_inf.')\(l4.');
-lr5 = (Hproj_inf.')\(l5.');
-lr6 = (Hproj_inf.')\(l6.');
+lr1 = Hpa'\l1;
+lr2 = Hpa'\l2;
+lr3 = Hpa'\l3;
+lr4 = Hpa'\l4;
+lr5 = Hpa'\l5;
+lr6 = Hpa'\l6;
 
 % show the transformed lines in the transformed image
 figure;imshow(uint8(I2));
@@ -353,14 +355,14 @@ plot(t, -(lr4(1)*t + lr4(3)) / lr4(2), 'r');
 
 % ToDo: to evaluate the results, compute the angle between the different pair 
 % of lines before and after the image transformation
-theta_l1_l2 = get_angle_between_two_lines(l1,l2)/pi*180;
-theta_lr1_lr2 = get_angle_between_two_lines(lr1,lr2)/pi*180;
+theta_l1_l2 = angle_between_lines(l1,l2)/pi*180;
+theta_lr1_lr2 = angle_between_lines(lr1,lr2)/pi*180;
 
-theta_l3_l4 = get_angle_between_two_lines(l3,l4)/pi*180;
-theta_lr3_lr4 = get_angle_between_two_lines(lr3,lr4)/pi*180;
+theta_l3_l4 = angle_between_lines(l3,l4)/pi*180;
+theta_lr3_lr4 = angle_between_lines(lr3,lr4)/pi*180;
 
-theta_l1_l3 = get_angle_between_two_lines(l1,l3)/pi*180;
-theta_l2_l4 = get_angle_between_two_lines(l2,l4)/pi*180;
+theta_l1_l3 = angle_between_lines(l1,l3)/pi*180;
+theta_l2_l4 = angle_between_lines(l2,l4)/pi*180;
 % 
 disp(['Angle between l1 and l2 before transformation: ', num2str(theta_l1_l2),' - after transformation: ', num2str(theta_lr1_lr2)])
 disp(['Angle between l3 and l4 before transformation: ', num2str(theta_l3_l4),' - after transformation: ', num2str(theta_lr3_lr4)])
@@ -379,10 +381,10 @@ lm2 = [lr1(1)*lr3(1), lr1(1)*lr3(2) + lr1(2)*lr3(1), lr1(2)*lr3(2)];
 % lm2 = [lr2(1)*lr4(1), lr2(1)*lr4(2) + lr2(2)*lr4(1), lr2(2)*lr4(2)];
 
 % compute angle between pairs of lines before rectification
-theta_init_l1_l2 = get_angle_between_two_lines(lr1,lr2)/pi*180;
-theta_init_l3_l4 = get_angle_between_two_lines(lr3,lr4)/pi*180;
-theta_init_l1_l3 = get_angle_between_two_lines(lr1,lr3)/pi*180;
-theta_init_l2_l4 = get_angle_between_two_lines(lr2,lr4)/pi*180;
+theta_init_l1_l2 = angle_between_lines(lr1,lr2)/pi*180;
+theta_init_l3_l4 = angle_between_lines(lr3,lr4)/pi*180;
+theta_init_l1_l3 = angle_between_lines(lr1,lr3)/pi*180;
+theta_init_l2_l4 = angle_between_lines(lr2,lr4)/pi*180;
 
 A = [lm1(1:2); lm2(1:2)];
 b = -[lm1(3); lm2(3)];
@@ -396,10 +398,10 @@ H3 = inv(Ha);
 I3 = apply_H(I2, H3);
 
 % compute the lines from the transformed points
-lr1 = (H3.')\(lr1.');
-lr2 = (H3.')\(lr2.');
-lr3 = (H3.')\(lr3.');
-lr4 = (H3.')\(lr4.');
+lr1 = H3'\l1;
+lr2 = H3'\l2;
+lr3 = H3'\l3;
+lr4 = H3'\l4;
 
 lr1 = [lr1(1) / lr1(3), lr1(2)/lr1(3), 1];
 lr2 = [lr2(1) / lr2(3), lr2(2)/lr2(3), 1];
@@ -415,10 +417,10 @@ plot(t, -(lr3(1)*t + lr3(3)) / lr3(2), 'g');
 plot(t, -(lr4(1)*t + lr4(3)) / lr4(2), 'r');
 
 % compute angle between pairs of lines after rectification
-theta_fin_l1_l2 = get_angle_between_two_lines(lr1,lr2)/pi*180;
-theta_fin_l3_l4 = get_angle_between_two_lines(lr3,lr4)/pi*180;
-theta_fin_l1_l3 = get_angle_between_two_lines(lr1,lr3)/pi*180;
-theta_fin_l2_l4 = get_angle_between_two_lines(lr2,lr4)/pi*180;
+theta_fin_l1_l2 = angle_between_lines(lr1,lr2)/pi*180;
+theta_fin_l3_l4 = angle_between_lines(lr3,lr4)/pi*180;
+theta_fin_l1_l3 = angle_between_lines(lr1,lr3)/pi*180;
+theta_fin_l2_l4 = angle_between_lines(lr2,lr4)/pi*180;
 
 disp('Angles after metric rectification:')
 
