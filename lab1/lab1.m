@@ -126,11 +126,11 @@ l6 = get_line_from_points(p2, p3);
 % show the chosen lines in the image
 figure;imshow(I);
 hold on;
-trans=1:0.1:1000;
-plot(trans, -(l1(1)*trans + l1(3)) / l1(2), 'y');
-plot(trans, -(l2(1)*trans + l2(3)) / l2(2), 'y');
-plot(trans, -(l3(1)*trans + l3(3)) / l3(2), 'y');
-plot(trans, -(l4(1)*trans + l4(3)) / l4(2), 'y');
+t=1:0.1:1000;
+plot(t, -(l1(1)*t + l1(3)) / l1(2), 'y');
+plot(t, -(l2(1)*t + l2(3)) / l2(2), 'y');
+plot(t, -(l3(1)*t + l3(3)) / l3(2), 'y');
+plot(t, -(l4(1)*t + l4(3)) / l4(2), 'y');
 
 % ToDo: compute the homography that affinely rectifies the image
 
