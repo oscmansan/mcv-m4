@@ -447,4 +447,110 @@ disp(['Angle between l2 and l4 before rectification (orthogonal): ', num2str(the
 %% 5. OPTIONAL: Metric Rectification in a single step
 % Use 5 pairs of orthogonal lines (pages 55-57, Hartley-Zisserman book)
 
+close all
+clear all
+clc
+
+% choose the image points
+I=imread('Data/0001_s.png');
+A = load('Data/0001_s_info_lines.txt');
+
+I = I(:, 1:450, :);
+
+% 5 pairs of orthogonal lines
+i = 614;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+pair1a = cross(p1,p2);
+i = 541;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+pair1b = cross(p1,p2);
+
+i = 159;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+pair2a = cross(p1,p2);
+i = 645;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+pair2b = cross(p1,p2);
+
+i = 188;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+pair3a = cross(p1,p2);
+i = 337;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+pair3b = cross(p1,p2);
+
+i = 301;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+pair4a = cross(p1,p2);
+i = 298;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+pair4b = cross(p1,p2);
+
+p1 = cross(pair1a, pair2b);
+p2 = cross(pair1a, pair1b);
+p3 = cross(pair2a, pair2b);
+p4 = cross(pair1b, pair2a);
+pair5a = cross(p1, p4);
+pair5b = cross(p2, p3);
+
+% show the chosen lines in the image
+figure;imshow(I);
+hold on;
+t=1:0.1:1000;
+plot(t, -(pair1a(1)*t + pair1a(3)) / pair1a(2), 'y');
+plot(t, -(pair1b(1)*t + pair1b(3)) / pair1b(2), 'y');
+plot(t, -(pair2a(1)*t + pair2a(3)) / pair2a(2), 'g');
+plot(t, -(pair2b(1)*t + pair2b(3)) / pair2b(2), 'g');
+plot(t, -(pair3a(1)*t + pair3a(3)) / pair3a(2), 'c');
+plot(t, -(pair3b(1)*t + pair3b(3)) / pair3b(2), 'c');
+plot(t, -(pair4a(1)*t + pair4a(3)) / pair4a(2), 'b');
+plot(t, -(pair4b(1)*t + pair4b(3)) / pair4b(2), 'b');
+plot(t, -(pair5a(1)*t + pair5a(3)) / pair5a(2), 'r');
+plot(t, -(pair5b(1)*t + pair5b(3)) / pair5b(2), 'r');
+
+% compute angle between pairs of lines before rectification
+theta_init_orthpair1 = angle_between_lines(pair1a,pair1b)/pi*180;
+theta_init_orthpair2 = angle_between_lines(pair2a,pair2b)/pi*180;
+theta_init_orthpair3 = angle_between_lines(pair3a,pair3b)/pi*180;
+theta_init_orthpair4 = angle_between_lines(pair4a,pair4b)/pi*180;
+theta_init_orthpair5 = angle_between_lines(pair5a,pair5b)/pi*180;
+
+% compute homography
+pair1a = [pair1a(1) / pair1a(3), pair1a(2)/pair1a(3), 1]; % Es necessari normalitzar, sino al
+pair1b = [pair1b(1) / pair1b(3), pair1b(2)/pair1b(3), 1]; % solucionar el C = linsolve(A, b)
+pair2a = [pair2a(1) / pair2a(3), pair2a(2)/pair2a(3), 1]; % no s'arriba a un resultat correcte 
+pair2b = [pair2b(1) / pair2b(3), pair2b(2)/pair2b(3), 1]; % per algun motiu del matlab.
+pair3a = [pair3a(1) / pair3a(3), pair3a(2)/pair3a(3), 1];
+pair3b = [pair3b(1) / pair3b(3), pair3b(2)/pair3b(3), 1];
+pair4a = [pair4a(1) / pair4a(3), pair4a(2)/pair4a(3), 1];
+pair4b = [pair4b(1) / pair4b(3), pair4b(2)/pair4b(3), 1];
+pair5a = [pair5a(1) / pair5a(3), pair5a(2)/pair5a(3), 1];
+pair5b = [pair5b(1) / pair5b(3), pair5b(2)/pair5b(3), 1];
+
+c1 = [pair1a(1)*pair1b(1), (pair1a(1)*pair1b(2)+pair1a(2)*pair1b(1))/2, pair1a(2)*pair1b(2), (pair1a(1)*pair1b(3)+pair1a(3)*pair1b(1))/2, (pair1a(2)*pair1b(3)+pair1a(3)*pair1b(2))/2, pair1a(3)*pair1b(3)];
+c2 = [pair2a(1)*pair2b(1), (pair2a(1)*pair2b(2)+pair2a(2)*pair2b(1))/2, pair2a(2)*pair2b(2), (pair2a(1)*pair2b(3)+pair2a(3)*pair2b(1))/2, (pair1a(2)*pair2b(3)+pair2a(3)*pair2b(2))/2, pair2a(3)*pair2b(3)];
+c3 = [pair3a(1)*pair3b(1), (pair3a(1)*pair3b(2)+pair3a(2)*pair3b(1))/2, pair3a(2)*pair3b(2), (pair3a(1)*pair3b(3)+pair3a(3)*pair3b(1))/2, (pair1a(2)*pair3b(3)+pair3a(3)*pair3b(2))/2, pair3a(3)*pair3b(3)];
+c4 = [pair4a(1)*pair4b(1), (pair4a(1)*pair4b(2)+pair4a(2)*pair4b(1))/2, pair4a(2)*pair4b(2), (pair4a(1)*pair4b(3)+pair4a(3)*pair4b(1))/2, (pair1a(2)*pair4b(3)+pair4a(3)*pair4b(2))/2, pair4a(3)*pair4b(3)];
+c5 = [pair5a(1)*pair5b(1), (pair5a(1)*pair5b(2)+pair5a(2)*pair5b(1))/2, pair5a(2)*pair5b(2), (pair5a(1)*pair5b(3)+pair5a(3)*pair5b(1))/2, (pair1a(2)*pair5b(3)+pair5a(3)*pair5b(2))/2, pair5a(3)*pair5b(3)];
+
+A = [c1(1:5); c2(1:5); c3(1:5); c4(1:5); c5(1:5)];
+b = -[c1(6); c2(6); c3(6); c4(6); c5(6)];
+C = linsolve(A, b);
+
+M = [C(1),  C(2)/2,  C(4)/2;
+     C(2)/2,  C(3),  C(5)/2;
+     C(4)/2, C(5)/2, 1];
+
+% TODO: find K and v
+
+[I2, minX, minY] = apply_H(I, H);
+figure;imshow(I2);
 
