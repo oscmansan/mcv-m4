@@ -1,4 +1,4 @@
-function I2 = apply_H(I,H)
+function [I2, minX, minY] = apply_H(I,H)
 
 I = double(I);
 [numRows, numCols, numChannels] = size(I);

@@ -28,7 +28,7 @@ H = [s*R(1,1),  s*R(1,2),  t(1);
      s*R(2,1),  s*R(2,2),  t(2);
      0,  0,  1];
 
-I2 = apply_H(I, H);
+[I2, minX, minY] = apply_H(I, H);
 figure; imshow(I); figure; imshow(uint8(I2));
 
 
@@ -41,7 +41,7 @@ H = [A(1,1),  A(1,2),  t(1);
      A(2,1),  A(2,2),  t(2);
      0,  0,  1];
 
-I2 = apply_H(I, H);
+[I2, minX, minY] = apply_H(I, H);
 figure; imshow(I); figure; imshow(uint8(I2));
 
 % ToDo: decompose the affinity in four transformations: two
@@ -73,11 +73,11 @@ assert(max(abs(H2-H),[],'all') < 1e-10);
 
 % ToDo: verify that the proper sequence of the four previous
 % transformations over the image I produces the same image I2 as before
-I3 = apply_H(I, Hrot2);
-I3 = apply_H(I3, Hscale);
-I3 = apply_H(I3, Hrot2');
-I3 = apply_H(I3, Hrot1);
-I3 = apply_H(I3, Htrans);
+[I3, minX, minY] = apply_H(I, Hrot2);
+[I3, minX, minY] = apply_H(I3, Hscale);
+[I3, minX, minY] = apply_H(I3, Hrot2');
+[I3, minX, minY] = apply_H(I3, Hrot1);
+[I3, minX, minY] = apply_H(I3, Htrans);
 figure; imshow(uint8(I3));  % the result is blurrier due to successive interpolations
 
 
@@ -91,7 +91,7 @@ H = [A(1,1),  A(1,2),  t(1);
      A(2,1),  A(2,2),  t(2);
      v(1),  v(2),  1];
 
-I2 = apply_H(I, H);
+[I2, minX, minY] = apply_H(I, H);
 figure; imshow(I); figure; imshow(uint8(I2));
 
 
@@ -141,7 +141,7 @@ linf = linf / linf(3);  % why does this need to be normalized?
  
 Hpa = [1, 0, 0; 0, 1, 0; linf'];
  
-I2 = apply_H(I, Hpa);
+[I2, minX, minY] = apply_H(I, Hpa);
 figure; imshow(uint8(I2));
 
 % ToDo: compute the transformed lines lr1, lr2, lr3, lr4
@@ -218,7 +218,7 @@ R = chol(inv(S));
 
 Ha = [R [0;0]; 0 0 1];
 H3 = Ha*Hpa;
-I3 = apply_H(I, H3);
+[I3, minX, minY] = apply_H(I, H3);
 
 % compute the lines from the transformed points
 lr1 = H3'\l1;
@@ -333,7 +333,7 @@ linf = linf/linf(3);
 
 Hpa = [1 0 0; 0 1 0; linf'];
  
-I2 = apply_H(I, Hpa);
+[I2, minX, minY] = apply_H(I, Hpa);
 figure; imshow(uint8(I2));
 
 % ToDo: compute the transformed lines lr1, lr2, lr3, lr4
@@ -397,7 +397,7 @@ R = chol(S, 'lower');
 
 Ha = [R [0;0]; 0 0 1];
 H3 = inv(Ha);
-I3 = apply_H(I2, H3);
+[I3, minX, minY] = apply_H(I2, H3);
 
 % compute the lines from the transformed points
 lr1 = H3'\lr1;
@@ -414,15 +414,15 @@ lr4 = [lr4(1) / lr4(3), lr4(2)/lr4(3), 1];
 lr5 = [lr5(1) / lr5(3), lr5(2)/lr5(3), 1];
 lr6 = [lr6(1) / lr6(3), lr6(2)/lr6(3), 1];
 
-figure; imshow(uint8(I3));
+figure;imshow(uint8(I3));
 hold on;
 t=1:0.1:1000;
-plot(t, -(lr1(1)*t + lr1(3)) / lr1(2), 'y');
-plot(t, -(lr2(1)*t + lr2(3)) / lr2(2), 'y');
-plot(t, -(lr3(1)*t + lr3(3)) / lr3(2), 'g');
-plot(t, -(lr4(1)*t + lr4(3)) / lr4(2), 'g');
-plot(t, -(lr5(1)*t + lr5(3)) / lr5(2), 'c');
-plot(t, -(lr6(1)*t + lr6(3)) / lr6(2), 'c');
+plot(t, -(lr1(1)*t + lr1(3)+(minY-1)*lr1(2)) / lr1(2), 'y');
+plot(t, -(lr2(1)*t + lr2(3)+(minY-1)*lr2(2)) / lr2(2), 'y');
+plot(t, -(lr3(1)*t + lr3(3)+(minY-1)*lr3(2)) / lr3(2), 'g');
+plot(t, -(lr4(1)*t + lr4(3)+(minY-1)*lr4(2)) / lr4(2), 'g');
+plot(t, -(lr5(1)*t + lr5(3)+(minY-1)*lr5(2)) / lr5(2), 'c');
+plot(t, -(lr6(1)*t + lr6(3)+(minY-1)*lr6(2)) / lr6(2), 'c');
 
 % compute angle between pairs of lines after rectification
 theta_fin_l1_l2 = angle_between_lines(lr1,lr2)/pi*180;
