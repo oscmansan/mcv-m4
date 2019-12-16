@@ -28,7 +28,7 @@ H = [s*R(1,1),  s*R(1,2),  t(1);
      s*R(2,1),  s*R(2,2),  t(2);
      0,  0,  1];
 
-[I2, minX, minY] = apply_H(I, H);
+I2 = apply_H(I, H);
 figure; imshow(I); figure; imshow(uint8(I2));
 
 
@@ -41,7 +41,7 @@ H = [A(1,1),  A(1,2),  t(1);
      A(2,1),  A(2,2),  t(2);
      0,  0,  1];
 
-[I2, minX, minY] = apply_H(I, H);
+I2 = apply_H(I, H);
 figure; imshow(I); figure; imshow(uint8(I2));
 
 % ToDo: decompose the affinity in four transformations: two
@@ -73,11 +73,11 @@ assert(max(abs(H2-H),[],'all') < 1e-10);
 
 % ToDo: verify that the proper sequence of the four previous
 % transformations over the image I produces the same image I2 as before
-[I3, minX, minY] = apply_H(I, Hrot2);
-[I3, minX, minY] = apply_H(I3, Hscale);
-[I3, minX, minY] = apply_H(I3, Hrot2');
-[I3, minX, minY] = apply_H(I3, Hrot1);
-[I3, minX, minY] = apply_H(I3, Htrans);
+I3 = apply_H(I, Hrot2);
+I3 = apply_H(I3, Hscale);
+I3 = apply_H(I3, Hrot2');
+I3 = apply_H(I3, Hrot1);
+I3 = apply_H(I3, Htrans);
 figure; imshow(uint8(I3));  % the result is blurrier due to successive interpolations
 
 
@@ -91,7 +91,7 @@ H = [A(1,1),  A(1,2),  t(1);
      A(2,1),  A(2,2),  t(2);
      v(1),  v(2),  1];
 
-[I2, minX, minY] = apply_H(I, H);
+I2 = apply_H(I, H);
 figure; imshow(I); figure; imshow(uint8(I2));
 
 
@@ -141,7 +141,7 @@ linf = linf / linf(3);  % why does this need to be normalized?
  
 Hpa = [1, 0, 0; 0, 1, 0; linf'];
  
-[I2, minX, minY] = apply_H(I, Hpa);
+I2 = apply_H(I, Hpa);
 figure; imshow(uint8(I2));
 
 % ToDo: compute the transformed lines lr1, lr2, lr3, lr4
@@ -192,78 +192,52 @@ assert(angle_lr3_lr4 == 0);
 %       the metric rectification) with the chosen lines printed on it.
 %       Compute also the angles between the pair of lines before and after
 %       rectification.
+lm1 = [lr1(1)*lr3(1), lr1(1)*lr3(2) + lr1(2)*lr3(1), lr1(2)*lr3(2)];
+%lm2 = [lr2(1)*lr4(1), lr2(1)*lr4(2) + lr2(2)*lr4(1), lr2(2)*lr4(2)];
+lm2 = [lr5(1)*lr6(1), lr5(1)*lr6(2) + lr5(2)*lr6(1), lr5(2)*lr6(2)];
 
-lr1 = [lr1(1) / lr1(3), lr1(2)/lr1(3), 1];
-lr2 = [lr2(1) / lr2(3), lr2(2)/lr2(3), 1];
-lr3 = [lr3(1) / lr3(3), lr3(2)/lr3(3), 1];
-lr4 = [lr4(1) / lr4(3), lr4(2)/lr4(3), 1];
-lr5 = [lr5(1) / lr5(3), lr5(2)/lr5(3), 1];
-lr6 = [lr6(1) / lr6(3), lr6(2)/lr6(3), 1];
+A = [lm1; lm2];  % need to have different directions
+s = null(A);
 
-lm1 = [lr5(1)*lr6(1), lr5(1)*lr6(2) + lr5(2)*lr6(1), lr5(2)*lr6(2)];
-lm2 = [lr2(1)*lr4(1), lr2(1)*lr4(2) + lr2(2)*lr4(1), lr2(2)*lr4(2)];
+S = [s(1), s(2); s(2), s(3)];
+K = chol(S, 'lower');
 
-% compute angle between pairs of lines before rectification
-theta_init_l1_l2 = angle_between_lines(lr1,lr2)/pi*180;
-theta_init_l3_l4 = angle_between_lines(lr3,lr4)/pi*180;
-theta_init_l1_l3 = angle_between_lines(lr1,lr3)/pi*180;
-theta_init_l2_l4 = angle_between_lines(lr2,lr4)/pi*180;
-
-A = [lm1(1:2); lm2(1:2)];
-b = -[lm1(3); lm2(3)];
-sol = linsolve(A, b);
-
-S = [sol(1) sol(2); sol(2) 1];
-R = chol(inv(S));
-
-Ha = [R [0;0]; 0 0 1];
-H3 = Ha*Hpa;
-[I3, minX, minY] = apply_H(I, H3);
+Has = [inv(K) [0;0]; 0, 0, 1];
+H3 = Has*Hpa;
+I3 = apply_H(I, H3);
 
 % compute the lines from the transformed points
-lr1 = H3'\l1;
-lr2 = H3'\l2;
-lr3 = H3'\l3;
-lr4 = H3'\l4;
-lr5 = H3'\l5;
-lr6 = H3'\l6;
-
-lr1 = [lr1(1) / lr1(3), lr1(2)/lr1(3), 1];
-lr2 = [lr2(1) / lr2(3), lr2(2)/lr2(3), 1];
-lr3 = [lr3(1) / lr3(3), lr3(2)/lr3(3), 1];
-lr4 = [lr4(1) / lr4(3), lr4(2)/lr4(3), 1];
-lr5 = [lr5(1) / lr5(3), lr5(2)/lr5(3), 1];
-lr6 = [lr6(1) / lr6(3), lr6(2)/lr6(3), 1];
+lrr1 = H3'\l1;
+lrr2 = H3'\l2;
+lrr3 = H3'\l3;
+lrr4 = H3'\l4;
+lrr5 = H3'\l5;
+lrr6 = H3'\l6;
 
 figure; imshow(uint8(I3));
 hold on;
 t=1:0.1:1000;
-plot(t, -(lr1(1)*t + lr1(3)) / lr1(2), 'y');
-plot(t, -(lr2(1)*t + lr2(3)) / lr2(2), 'y');
-plot(t, -(lr3(1)*t + lr3(3)) / lr3(2), 'g');
-plot(t, -(lr4(1)*t + lr4(3)) / lr4(2), 'g');
-plot(t, -(lr5(1)*t + lr5(3)) / lr5(2), 'c');
-plot(t, -(lr6(1)*t + lr6(3)) / lr6(2), 'c');
+plot(t, -(lrr1(1)*t + lrr1(3)) / lrr1(2), 'y');
+plot(t, -(lrr2(1)*t + lrr2(3)) / lrr2(2), 'y');
+plot(t, -(lrr3(1)*t + lrr3(3)) / lrr3(2), 'g');
+plot(t, -(lrr4(1)*t + lrr4(3)) / lrr4(2), 'g');
+plot(t, -(lrr5(1)*t + lrr5(3)) / lrr5(2), 'c');
+plot(t, -(lrr6(1)*t + lrr6(3)) / lrr6(2), 'c');
 hold off;
 
-% compute angle between pairs of lines after rectification
-theta_fin_l1_l2 = angle_between_lines(lr1,lr2)/pi*180;
-theta_fin_l3_l4 = angle_between_lines(lr3,lr4)/pi*180;
-theta_fin_l1_l3 = angle_between_lines(lr1,lr3)/pi*180;
-theta_fin_l2_l4 = angle_between_lines(lr2,lr4)/pi*180;
+% compute the angle between pairs of lines after rectification
+angle_lr1_lr3 = angle_between_lines(lrr1,lrr3)/pi*180;
+angle_lr2_lr4 = angle_between_lines(lrr2,lrr4)/pi*180;
+angle_lr5_lr6 = angle_between_lines(lrr5,lrr6)/pi*180;
 
+fprintf('Angle between (lr1, lr3): %.2f\n', angle_lr1_lr3);
+fprintf('Angle between (lr2, lr4): %.2f\n', angle_lr2_lr4);
+fprintf('Angle between (lr5, lr6): %.2f\n', angle_lr5_lr6);
 
-disp('Angles after metric rectification:')
+assert(angle_lr1_lr3 == 90);
+assert(angle_lr2_lr4 == 90);
+assert(angle_lr5_lr6 == 90);
 
-disp(['Angle between l1 and l2 before transformation (parallel): ', num2str(theta_init_l1_l2),' - after transformation: ', num2str(theta_fin_l1_l2)])
-disp(['Angle between l3 and l4 before transformation (parallel): ', num2str(theta_init_l3_l4),' - after transformation: ', num2str(theta_fin_l3_l4)])
-disp(['Angle between l1 and l3 before transformation (orthogonal): ', num2str(theta_init_l1_l3),' - after transformation: ', num2str(theta_fin_l1_l3)])
-disp(['Angle between l2 and l4 before transformation (orthogonal): ', num2str(theta_init_l2_l4),' - after transformation: ', num2str(theta_fin_l2_l4)])
-
-disp(['Angle between l1 and l2 before rectification (parallel): ', num2str(angle_l1_l2),' - after rectification: ', num2str(theta_fin_l1_l2)])
-disp(['Angle between l3 and l4 before rectification (parallel): ', num2str(angle_l3_l4),' - after rectification: ', num2str(theta_fin_l3_l4)])
-disp(['Angle between l1 and l3 before rectification (orthogonal): ', num2str(angle_l1_l3),' - after rectification: ', num2str(theta_fin_l1_l3)])
-disp(['Angle between l2 and l4 before rectification (orthogonal): ', num2str(angle_l2_l4),' - after rectification: ', num2str(theta_fin_l2_l4)])
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 4. Affine and Metric Rectification of the left facade of image 0001
