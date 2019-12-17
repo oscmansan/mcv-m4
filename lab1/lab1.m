@@ -469,7 +469,7 @@ K = chol(KKt, 'lower');
 A = [C(1), C(2)/2;
      C(2)/2, C(3);
      C(4)/2, C(5)/2];
-b = [C(4)/2; C(5)/2; C(6)]
+b = [C(4)/2; C(5)/2; C(6)];
 v = linsolve(A,b);
 
 H = [K [0;0]; v' 1];
@@ -491,11 +491,18 @@ pair5a = H'\pair5a';
 pair5b = H'\pair5b';
 
 % compute angle between pairs of lines before rectification
-theta_fin_orthpair1 = angle_between_lines(pair1a,pair1b)/pi*180
-theta_fin_orthpair2 = angle_between_lines(pair2a,pair2b)/pi*180
-theta_fin_orthpair3 = angle_between_lines(pair3a,pair3b)/pi*180
-theta_fin_orthpair4 = angle_between_lines(pair4a,pair4b)/pi*180
-theta_fin_orthpair5 = angle_between_lines(pair5a,pair5b)/pi*180
+theta_fin_orthpair1 = angle_between_lines(pair1a,pair1b)/pi*180;
+theta_fin_orthpair2 = angle_between_lines(pair2a,pair2b)/pi*180;
+theta_fin_orthpair3 = angle_between_lines(pair3a,pair3b)/pi*180;
+theta_fin_orthpair4 = angle_between_lines(pair4a,pair4b)/pi*180;
+theta_fin_orthpair5 = angle_between_lines(pair5a,pair5b)/pi*180;
+
+disp(['theta_init_orthpair1 ',num2str(theta_init_orthpair1),' - theta_fin_orthpair1 ',num2str(theta_fin_orthpair1)])
+disp(['theta_init_orthpair2 ',num2str(theta_init_orthpair2),' - theta_fin_orthpair2 ',num2str(theta_fin_orthpair2)])
+disp(['theta_init_orthpair3 ',num2str(theta_init_orthpair3),' - theta_fin_orthpair3 ',num2str(theta_fin_orthpair3)])
+disp(['theta_init_orthpair4 ',num2str(theta_init_orthpair4),' - theta_fin_orthpair4 ',num2str(theta_fin_orthpair4)])
+disp(['theta_init_orthpair5 ',num2str(theta_init_orthpair5),' - theta_fin_orthpair5 ',num2str(theta_fin_orthpair5)])
+disp(['initial mean angular error: ',num2str(sqrt(mse([theta_init_orthpair1,theta_init_orthpair2,theta_init_orthpair3,theta_init_orthpair4,theta_init_orthpair5],[90,90,90,90,90]))),' - final mean angular error: ',num2str(sqrt(mse([theta_fin_orthpair1,theta_fin_orthpair2,theta_fin_orthpair3,theta_fin_orthpair4,theta_fin_orthpair5],[90,90,90,90,90])))])
 
 % show the transformed lines in the image
 figure;imshow(uint8(I2));
