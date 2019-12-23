@@ -365,157 +365,125 @@ hold off;
 %% 5. OPTIONAL: Metric Rectification in a single step
 % Use 5 pairs of orthogonal lines (pages 55-57, Hartley-Zisserman book)
 
-close all
-clear all
-clc
-
-% choose the image points
 I = imread('Data/0001_s.png');
 A = load('Data/0001_s_info_lines.txt');
 
 I = I(:, 1:450, :);
 
-% 5 pairs of orthogonal lines
+i = 315;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+l1 = cross(p1,p2);
+i = 301;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+m1 = cross(p1,p2);
+
 i = 614;
 p1 = [A(i,1) A(i,2) 1]';
 p2 = [A(i,3) A(i,4) 1]';
-pair1a = cross(p1,p2);
+l2 = cross(p1,p2);
 i = 541;
 p1 = [A(i,1) A(i,2) 1]';
 p2 = [A(i,3) A(i,4) 1]';
-pair1b = cross(p1,p2);
-
-i = 159;
-p1 = [A(i,1) A(i,2) 1]';
-p2 = [A(i,3) A(i,4) 1]';
-pair2a = cross(p1,p2);
-i = 645;
-p1 = [A(i,1) A(i,2) 1]';
-p2 = [A(i,3) A(i,4) 1]';
-pair2b = cross(p1,p2);
+m2 = cross(p1,p2);
 
 i = 188;
 p1 = [A(i,1) A(i,2) 1]';
 p2 = [A(i,3) A(i,4) 1]';
-pair3a = cross(p1,p2);
+l3 = cross(p1,p2);
 i = 337;
 p1 = [A(i,1) A(i,2) 1]';
 p2 = [A(i,3) A(i,4) 1]';
-pair3b = cross(p1,p2);
+m3 = cross(p1,p2);
 
-i = 301;
+i = 284;
 p1 = [A(i,1) A(i,2) 1]';
 p2 = [A(i,3) A(i,4) 1]';
-pair4a = cross(p1,p2);
+l4 = cross(p1,p2);
 i = 298;
 p1 = [A(i,1) A(i,2) 1]';
 p2 = [A(i,3) A(i,4) 1]';
-pair4b = cross(p1,p2);
+m4 = cross(p1,p2);
 
-p1 = cross(pair1a, pair2b);
-p2 = cross(pair1a, pair1b);
-p3 = cross(pair2a, pair2b);
-p4 = cross(pair1b, pair2a);
-pair5a = cross(p1, p4);
-pair5b = cross(p2, p3);
+i = 645;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+l5 = cross(p1,p2);
+i = 170;
+p1 = [A(i,1) A(i,2) 1]';
+p2 = [A(i,3) A(i,4) 1]';
+m5 = cross(p1,p2);
 
-% show the chosen lines in the image
 figure;imshow(I);
 hold on;
 t=1:0.1:1000;
-plot(t, -(pair1a(1)*t + pair1a(3)) / pair1a(2), 'y');
-plot(t, -(pair1b(1)*t + pair1b(3)) / pair1b(2), 'y');
-plot(t, -(pair2a(1)*t + pair2a(3)) / pair2a(2), 'g');
-plot(t, -(pair2b(1)*t + pair2b(3)) / pair2b(2), 'g');
-plot(t, -(pair3a(1)*t + pair3a(3)) / pair3a(2), 'c');
-plot(t, -(pair3b(1)*t + pair3b(3)) / pair3b(2), 'c');
-plot(t, -(pair4a(1)*t + pair4a(3)) / pair4a(2), 'b');
-plot(t, -(pair4b(1)*t + pair4b(3)) / pair4b(2), 'b');
-plot(t, -(pair5a(1)*t + pair5a(3)) / pair5a(2), 'r');
-plot(t, -(pair5b(1)*t + pair5b(3)) / pair5b(2), 'r');
+plot(t, -(l1(1)*t + l1(3)) / l1(2), 'y');
+plot(t, -(m1(1)*t + m1(3)) / m1(2), 'y');
+plot(t, -(l2(1)*t + l2(3)) / l2(2), 'g');
+plot(t, -(m2(1)*t + m2(3)) / m2(2), 'g');
+plot(t, -(l3(1)*t + l3(3)) / l3(2), 'c');
+plot(t, -(m3(1)*t + m3(3)) / m3(2), 'c');
+plot(t, -(l4(1)*t + l4(3)) / l4(2), 'b');
+plot(t, -(m4(1)*t + m4(3)) / m4(2), 'b');
+plot(t, -(l5(1)*t + l5(3)) / l5(2), 'r');
+plot(t, -(m5(1)*t + m5(3)) / m5(2), 'r');
+hold off;
 
-% compute angle between pairs of lines before rectification
-theta_init_orthpair1 = angle_between_lines(pair1a,pair1b)/pi*180;
-theta_init_orthpair2 = angle_between_lines(pair2a,pair2b)/pi*180;
-theta_init_orthpair3 = angle_between_lines(pair3a,pair3b)/pi*180;
-theta_init_orthpair4 = angle_between_lines(pair4a,pair4b)/pi*180;
-theta_init_orthpair5 = angle_between_lines(pair5a,pair5b)/pi*180;
+%waitforbuttonpress;
 
-% compute homography
-pair1a = [pair1a(1) / pair1a(3), pair1a(2)/pair1a(3), 1];
-pair1b = [pair1b(1) / pair1b(3), pair1b(2)/pair1b(3), 1];
-pair2a = [pair2a(1) / pair2a(3), pair2a(2)/pair2a(3), 1];
-pair2b = [pair2b(1) / pair2b(3), pair2b(2)/pair2b(3), 1];
-pair3a = [pair3a(1) / pair3a(3), pair3a(2)/pair3a(3), 1];
-pair3b = [pair3b(1) / pair3b(3), pair3b(2)/pair3b(3), 1];
-pair4a = [pair4a(1) / pair4a(3), pair4a(2)/pair4a(3), 1];
-pair4b = [pair4b(1) / pair4b(3), pair4b(2)/pair4b(3), 1];
-pair5a = [pair5a(1) / pair5a(3), pair5a(2)/pair5a(3), 1];
-pair5b = [pair5b(1) / pair5b(3), pair5b(2)/pair5b(3), 1];
+lm1 = [l1(1)*m1(1), (l1(1)*m1(2)+l1(2)*m1(1))/2, l1(2)*m1(2), (l1(1)*m1(3)+l1(3)*m1(1))/2, (l1(2)*m1(3)+l1(3)*m1(2))/2, l1(3)*m1(3)];
+lm2 = [l2(1)*m2(1), (l2(1)*m2(2)+l2(2)*m2(1))/2, l2(2)*m2(2), (l2(1)*m2(3)+l2(3)*m2(1))/2, (l2(2)*m2(3)+l2(3)*m2(2))/2, l2(3)*m2(3)];
+lm3 = [l3(1)*m3(1), (l3(1)*m3(2)+l3(2)*m3(1))/2, l3(2)*m3(2), (l3(1)*m3(3)+l3(3)*m3(1))/2, (l3(2)*m3(3)+l3(3)*m3(2))/2, l3(3)*m3(3)];
+lm4 = [l4(1)*m4(1), (l4(1)*m4(2)+l4(2)*m4(1))/2, l4(2)*m4(2), (l4(1)*m4(3)+l4(3)*m4(1))/2, (l4(2)*m4(3)+l4(3)*m4(2))/2, l4(3)*m4(3)];
+lm5 = [l5(1)*m5(1), (l5(1)*m5(2)+l5(2)*m5(1))/2, l5(2)*m5(2), (l5(1)*m5(3)+l5(3)*m5(1))/2, (l5(2)*m5(3)+l5(3)*m5(2))/2, l5(3)*m5(3)];
 
-c1 = [pair1a(1)*pair1b(1), (pair1a(1)*pair1b(2)+pair1a(2)*pair1b(1))/2, pair1a(2)*pair1b(2), (pair1a(1)*pair1b(3)+pair1a(3)*pair1b(1))/2, (pair1a(2)*pair1b(3)+pair1a(3)*pair1b(2))/2, pair1a(3)*pair1b(3)];
-c2 = [pair2a(1)*pair2b(1), (pair2a(1)*pair2b(2)+pair2a(2)*pair2b(1))/2, pair2a(2)*pair2b(2), (pair2a(1)*pair2b(3)+pair2a(3)*pair2b(1))/2, (pair2a(2)*pair2b(3)+pair2a(3)*pair2b(2))/2, pair2a(3)*pair2b(3)];
-c3 = [pair3a(1)*pair3b(1), (pair3a(1)*pair3b(2)+pair3a(2)*pair3b(1))/2, pair3a(2)*pair3b(2), (pair3a(1)*pair3b(3)+pair3a(3)*pair3b(1))/2, (pair3a(2)*pair3b(3)+pair3a(3)*pair3b(2))/2, pair3a(3)*pair3b(3)];
-c4 = [pair4a(1)*pair4b(1), (pair4a(1)*pair4b(2)+pair4a(2)*pair4b(1))/2, pair4a(2)*pair4b(2), (pair4a(1)*pair4b(3)+pair4a(3)*pair4b(1))/2, (pair4a(2)*pair4b(3)+pair4a(3)*pair4b(2))/2, pair4a(3)*pair4b(3)];
-c5 = [pair5a(1)*pair5b(1), (pair5a(1)*pair5b(2)+pair5a(2)*pair5b(1))/2, pair5a(2)*pair5b(2), (pair5a(1)*pair5b(3)+pair5a(3)*pair5b(1))/2, (pair5a(2)*pair5b(3)+pair5a(3)*pair5b(2))/2, pair5a(3)*pair5b(3)];
+A = [lm1; lm2; lm3; lm4; lm5];
+s = null(A);  % should return a single solution
+ 
+a = s(1);
+b = s(2);
+c = s(3);
+d = s(4);
+e = s(5);
+f = s(6);
+C = [a, b/2, d/2; b/2, c, e/2; d/2, e/2, f];
 
-A = [c1; c2; c3; c4; c5];
-C = null(A);
+assert(issymmetric(C));
 
-KKt = [C(1),  C(2)/2;
-       C(2)/2,  C(3)];
-K = chol(KKt, 'lower');
+[U,D,V] = svd(C);
+H = U;
 
-A = [C(1), C(2)/2;
-     C(2)/2, C(3);
-     C(4)/2, C(5)/2];
-b = [C(4)/2; C(5)/2; C(6)];
-v = linsolve(A,b);
-
-H = [K [0;0]; v' 1];
-H = inv(H);
+lr1 = H'\l1;
+mr1 = H'\m1;
+lr2 = H'\l2;
+mr2 = H'\m2;
+lr3 = H'\l3;
+mr3 = H'\m3;
+lr4 = H'\l4;
+mr4 = H'\m4;
+lr5 = H'\l5;
+mr5 = H'\m5;
 
 [I2, minX, minY] = apply_H(I, H);
+
 figure;imshow(uint8(I2));
+% hold on;
+% t=1:0.1:1000;
+% plot(t, -(lr1(1)*t + lr1(3) +(minY-1)*lr1(2)) / lr1(2), 'y');
+% plot(t, -(mr1(1)*t + mr1(3) +(minY-1)*mr1(2)) / mr1(2), 'y');
+% plot(t, -(lr2(1)*t + lr2(3) +(minY-1)*lr2(2)) / lr2(2), 'g');
+% plot(t, -(mr2(1)*t + mr2(3) +(minY-1)*mr2(2)) / mr2(2), 'g');
+% plot(t, -(lr3(1)*t + lr3(3) +(minY-1)*lr3(2)) / lr3(2), 'c');
+% plot(t, -(mr3(1)*t + mr3(3) +(minY-1)*mr3(2)) / mr3(2), 'c');
+% plot(t, -(lr4(1)*t + lr4(3) +(minY-1)*lr4(2)) / lr4(2), 'b');
+% plot(t, -(mr4(1)*t + mr4(3) +(minY-1)*mr4(2)) / mr4(2), 'b');
+% plot(t, -(lr5(1)*t + lr5(3) +(minY-1)*lr5(2)) / lr5(2), 'r');
+% plot(t, -(mr5(1)*t + mr5(3) +(minY-1)*mr5(2)) / mr5(2), 'r');
+% hold off;
 
-% compute the lines from the transformed points
-pair1a = H'\pair1a';
-pair1b = H'\pair1b';
-pair2a = H'\pair2a';
-pair2b = H'\pair2b';
-pair3a = H'\pair3a';
-pair3b = H'\pair3b';
-pair4a = H'\pair4a';
-pair4b = H'\pair4b';
-pair5a = H'\pair5a';
-pair5b = H'\pair5b';
-
-% compute angle between pairs of lines before rectification
-theta_fin_orthpair1 = angle_between_lines(pair1a,pair1b)/pi*180;
-theta_fin_orthpair2 = angle_between_lines(pair2a,pair2b)/pi*180;
-theta_fin_orthpair3 = angle_between_lines(pair3a,pair3b)/pi*180;
-theta_fin_orthpair4 = angle_between_lines(pair4a,pair4b)/pi*180;
-theta_fin_orthpair5 = angle_between_lines(pair5a,pair5b)/pi*180;
-
-disp(['theta_init_orthpair1 ',num2str(theta_init_orthpair1),' - theta_fin_orthpair1 ',num2str(theta_fin_orthpair1)])
-disp(['theta_init_orthpair2 ',num2str(theta_init_orthpair2),' - theta_fin_orthpair2 ',num2str(theta_fin_orthpair2)])
-disp(['theta_init_orthpair3 ',num2str(theta_init_orthpair3),' - theta_fin_orthpair3 ',num2str(theta_fin_orthpair3)])
-disp(['theta_init_orthpair4 ',num2str(theta_init_orthpair4),' - theta_fin_orthpair4 ',num2str(theta_fin_orthpair4)])
-disp(['theta_init_orthpair5 ',num2str(theta_init_orthpair5),' - theta_fin_orthpair5 ',num2str(theta_fin_orthpair5)])
-disp(['initial mean angular error: ',num2str(sqrt(mse([theta_init_orthpair1,theta_init_orthpair2,theta_init_orthpair3,theta_init_orthpair4,theta_init_orthpair5],[90,90,90,90,90]))),' - final mean angular error: ',num2str(sqrt(mse([theta_fin_orthpair1,theta_fin_orthpair2,theta_fin_orthpair3,theta_fin_orthpair4,theta_fin_orthpair5],[90,90,90,90,90])))])
-
-% show the transformed lines in the image
-figure;imshow(uint8(I2));
-hold on;
-t=1:0.1:10000;
-plot(t, -(pair1a(1)*t + pair1a(3)+(minY-1)*pair1a(2)) / pair1a(2), 'y');
-plot(t, -(pair1b(1)*t + pair1b(3)+(minY-1)*pair1b(2)) / pair1b(2), 'y');
-plot(t, -(pair2a(1)*t + pair2a(3)+(minY-1)*pair2a(2)) / pair2a(2), 'g');
-plot(t, -(pair2b(1)*t + pair2b(3)+(minY-1)*pair2b(2)) / pair2b(2), 'g');
-plot(t, -(pair3a(1)*t + pair3a(3)+(minY-1)*pair3a(2)) / pair3a(2), 'c');
-plot(t, -(pair3b(1)*t + pair3b(3)+(minY-1)*pair3b(2)) / pair3b(2), 'c');
-plot(t, -(pair4a(1)*t + pair4a(3)+(minY-1)*pair4a(2)) / pair4a(2), 'b');
-plot(t, -(pair4b(1)*t + pair4b(3)+(minY-1)*pair4b(2)) / pair4b(2), 'b');
-plot(t, -(pair5a(1)*t + pair5a(3)+(minY-1)*pair5a(2)) / pair5a(2), 'r');
-plot(t, -(pair5b(1)*t + pair5b(3)+(minY-1)*pair5b(2)) / pair5b(2), 'r');
-
+fprintf('angle between (l1,m1): %.3f\n', angle_between_lines(lr1,mr1)/pi*180);
+fprintf('angle between (l2,m2): %.3f\n', angle_between_lines(lr2,mr2)/pi*180);
+fprintf('angle between (l3,m3): %.3f\n', angle_between_lines(lr3,mr3)/pi*180);
+fprintf('angle between (l4,m4): %.3f\n', angle_between_lines(lr4,mr4)/pi*180);
+fprintf('angle between (l5,m5): %.3f\n', angle_between_lines(lr5,mr5)/pi*180);
