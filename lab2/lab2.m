@@ -8,38 +8,49 @@ addpath('sift');
 
 %% Open images
 
-imargb = imread('Data/llanes/llanes_a.jpg');
-imbrgb = imread('Data/llanes/llanes_b.jpg');
-imcrgb = imread('Data/llanes/llanes_c.jpg');
+ima_path_llanes = 'Data/llanes/llanes_a.jpg';
+imb_path_llanes = 'Data/llanes/llanes_b.jpg';
+imc_path_llanes = 'Data/llanes/llanes_c.jpg';
 
+imargb = imread(ima_path_llanes);
+imbrgb = imread(imb_path_llanes);
+imcrgb = imread(imc_path_llanes);
 ima = sum(double(imargb), 3) / 3 / 255;
 imb = sum(double(imbrgb), 3) / 3 / 255;
 imc = sum(double(imcrgb), 3) / 3 / 255;
 
-imargb_castle = imread('Data/castle_int/0016_s.png');
-imbrgb_castle = imread('Data/castle_int/0015_s.png');
-imcrgb_castle = imread('Data/castle_int/0014_s.png');
+ima_path_castle = 'Data/castle_int/0016_s.png';
+imb_path_castle = 'Data/castle_int/0015_s.png';
+imc_path_castle = 'Data/castle_int/0014_s.png';
 
-ima_castle = sum(double(imargb_castle), 3) / 3 / 255;
-imb_castle = sum(double(imbrgb_castle), 3) / 3 / 255;
-imc_castle = sum(double(imcrgb_castle), 3) / 3 / 255;
+% imargb_castle = imread(ima_path_castle);
+% imbrgb_castle = imread(imb_path_castle);
+% imcrgb_castle = imread(imc_path_castle);
+% ima_castle = sum(double(imargb_castle), 3) / 3 / 255;
+% imb_castle = sum(double(imbrgb_castle), 3) / 3 / 255;
+% imc_castle = sum(double(imcrgb_castle), 3) / 3 / 255;
 
-imargb_site13 = imread('Data/aerial/site13/frame00000.png');
-imbrgb_site13 = imread('Data/aerial/site13/frame00002.png');
-imcrgb_site13 = imread('Data/aerial/site13/frame00003.png');
+ima_path_site13 = 'Data/aerial/site13/frame00000.png';
+imb_path_site13 = 'Data/aerial/site13/frame00002.png';
+imc_path_site13 = 'Data/aerial/site13/frame00003.png';
 
-ima_site13 = sum(double(imargb_site13), 3) / 3 / 255;
-imb_site13 = sum(double(imbrgb_site13), 3) / 3 / 255;
-imc_site13 = sum(double(imcrgb_site13), 3) / 3 / 255;
+% imargb_site13 = imread(ima_path_site13);
+% imbrgb_site13 = imread(imb_path_site13);
+% imcrgb_site13 = imread(imc_path_site13);
+% ima_site13 = sum(double(imargb_site13), 3) / 3 / 255;
+% imb_site13 = sum(double(imbrgb_site13), 3) / 3 / 255;
+% imc_site13 = sum(double(imcrgb_site13), 3) / 3 / 255;
 
-imargb_site22 = double(imread('Data/aerial/site22/frame_00001.tif'));
-imbrgb_site22 = double(imread('Data/aerial/site22/frame_00018.tif'));
-imcrgb_site22 = double(imread('Data/aerial/site22/frame_00030.tif'));
+ima_path_site22 = 'Data/aerial/site22/frame_00001.tif';
+imb_path_site22 = 'Data/aerial/site22/frame_00018.tif';
+imc_path_site22 = 'Data/aerial/site22/frame_00030.tif';
 
-ima_site22 = imargb_site22;
-imb_site22 = imbrgb_site22;
-imc_site22 = imcrgb_site22;
-
+% imargb_site22 = double(imread(ima_path_site22));
+% imbrgb_site22 = double(imread(imb_path_site22));
+% imcrgb_site22 = double(imread(imc_path_site22));
+% ima_site22 = imargb_site22;
+% imb_site22 = imbrgb_site22;
+% imc_site22 = imcrgb_site22;
 
 %% Compute SIFT keypoints
 [points_a, desc_a] = sift(ima, 'Threshold', 0.01);
@@ -85,7 +96,6 @@ plotmatches(ima, imb, points_a(1:2,:), points_b(1:2,:), matches_ab(:,inliers_ab)
 
 vgg_gui_H(imargb, imbrgb, Hab);
 
-
 %% Compute homography (normalized DLT) between b and c, play with the homography
 xbc_b = [points_b(1:2, matches_bc(1,:)); ones(1, length(matches_bc))];
 xbc_c = [points_c(1:2, matches_bc(2,:)); ones(1, length(matches_bc))];
@@ -98,9 +108,7 @@ vgg_gui_H(imbrgb, imcrgb, Hbc);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 3. Build the mosaic
-
 corners = [-400 1200 -100 650];
-% identity matrix eye
 iwb = apply_H_v2(imbrgb, eye(3), corners);   % ToDo: complete the call to the function
 iwa = apply_H_v2(imargb, Hab, corners);    % ToDo: complete the call to the function
 iwc = apply_H_v2(imcrgb, inv(Hbc), corners);    % ToDo: complete the call to the function
@@ -110,86 +118,36 @@ imshow(max(iwc, max(iwb, iwa))); %image(max(iwc, max(iwb, iwa)));axis off;
 title('Mosaic A-B-C');
 
 %% 3.1: ToDo: compute the mosaic with castle_int images
-    % Compute SIFT keypoints
-[points_a, desc_a] = sift(ima_castle, 'Threshold', 0.01);
-[points_b, desc_b] = sift(imb_castle, 'Threshold', 0.01);
-[points_c, desc_c] = sift(imc_castle, 'Threshold', 0.01);
-    % Match SIFT keypoints
-matches_ab = siftmatch(desc_a, desc_b);
-matches_bc = siftmatch(desc_b, desc_c);
-    % Compute homography
 th = 3;
-xab_a = [points_a(1:2, matches_ab(1,:)); ones(1, length(matches_ab))];
-xab_b = [points_b(1:2, matches_ab(2,:)); ones(1, length(matches_ab))];
-[Hab, ~] = ransac_homography_adaptive_loop(xab_a, xab_b, th, 1000);
-xbc_b = [points_b(1:2, matches_bc(1,:)); ones(1, length(matches_bc))];
-xbc_c = [points_c(1:2, matches_bc(2,:)); ones(1, length(matches_bc))];
-[Hbc, ~] = ransac_homography_adaptive_loop(xbc_b, xbc_c, th, 1000);
-    % Build mosaic
 corners = [-600 1600 -250 800];
-iwb = apply_H_v2(imbrgb_castle, eye(3), corners);
-iwa = apply_H_v2(imargb_castle, Hab, corners);
-iwc = apply_H_v2(imcrgb_castle, inv(Hbc), corners);
-
+mosaic_castle = compute_mosaic_3(ima_path_castle, imb_path_castle, imc_path_castle, ...
+    th, corners);
 figure;
-imshow(max(iwc, max(iwb, iwa)));
+imshow(mosaic_castle);
 title('Castle mosaic A-B-C');
 
-
 %% 3.2: ToDo: compute the mosaic with aerial images set 13
-    % Compute SIFT keypoints
-[points_a, desc_a] = sift(ima_site13, 'Threshold', 0.01);
-[points_b, desc_b] = sift(imb_site13, 'Threshold', 0.01);
-[points_c, desc_c] = sift(imc_site13, 'Threshold', 0.01);
-    % Match SIFT keypoints
-matches_ab = siftmatch(desc_a, desc_b);
-matches_bc = siftmatch(desc_b, desc_c);
-    % Compute homography
 th = 3;
-xab_a = [points_a(1:2, matches_ab(1,:)); ones(1, length(matches_ab))];
-xab_b = [points_b(1:2, matches_ab(2,:)); ones(1, length(matches_ab))];
-[Hab, ~] = ransac_homography_adaptive_loop(xab_a, xab_b, th, 1000);
-xbc_b = [points_b(1:2, matches_bc(1,:)); ones(1, length(matches_bc))];
-xbc_c = [points_c(1:2, matches_bc(2,:)); ones(1, length(matches_bc))];
-[Hbc, ~] = ransac_homography_adaptive_loop(xbc_b, xbc_c, th, 1000);
-    % Build mosaic
 corners = [-300 1300 -100 1000];
-iwb = apply_H_v2(imbrgb_site13, eye(3), corners);
-iwa = apply_H_v2(imargb_site13, Hab, corners);
-iwc = apply_H_v2(imcrgb_site13, inv(Hbc), corners);
-
+mosaic_site13 = compute_mosaic_3(ima_path_site13, imb_path_site13, imc_path_site13, ...
+    th, corners);
 figure;
-imshow(max(iwc, max(iwb, iwa)));
+imshow(mosaic_site13);
 title('Site13 mosaic A-B-C');
 
 %% 3.3: ToDo: compute the mosaic with aerial images set 22
-    % Compute SIFT keypoints
-[points_a, desc_a] = sift(ima_site22, 'Threshold', 0.01);
-[points_b, desc_b] = sift(imb_site22, 'Threshold', 0.01);
-[points_c, desc_c] = sift(imc_site22, 'Threshold', 0.01);
-    % Match SIFT keypoints
-matches_ab = siftmatch(desc_a, desc_b);
-matches_bc = siftmatch(desc_b, desc_c);
-    % Compute homography
 th = 3;
-xab_a = [points_a(1:2, matches_ab(1,:)); ones(1, length(matches_ab))];
-xab_b = [points_b(1:2, matches_ab(2,:)); ones(1, length(matches_ab))];
-[Hab, ~] = ransac_homography_adaptive_loop(xab_a, xab_b, th, 1000);
-xbc_b = [points_b(1:2, matches_bc(1,:)); ones(1, length(matches_bc))];
-xbc_c = [points_c(1:2, matches_bc(2,:)); ones(1, length(matches_bc))];
-[Hbc, ~] = ransac_homography_adaptive_loop(xbc_b, xbc_c, th, 1000);
-    % Build mosaic
 corners = [-500 1500 -100 1100];
-iwb = apply_H_v2(imbrgb_site22, eye(3), corners);
-iwa = apply_H_v2(imargb_site22, Hab, corners);
-iwc = apply_H_v2(imcrgb_site22, inv(Hbc), corners);
-
+mosaic_site22 = compute_mosaic_3(ima_path_site22, imb_path_site22, imc_path_site22, ...
+    th, corners);
 figure;
-imshow(max(iwc, max(iwb, iwa)));
+imshow(mosaic_site22);
 title('Site22 mosaic A-B-C');
 
-% ToDo: comment the results in every of the four cases: hypothetise why it works or
+%% 3.4: ToDo: comment the results in every of the four cases: hypothetise why it works or
 %       does not work
+
+% COMMENTS PRESENTED IN THE LAB REPORT
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 4. Refine the homography with the Gold Standard algorithm
