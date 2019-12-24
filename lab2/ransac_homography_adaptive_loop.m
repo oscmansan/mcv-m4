@@ -6,7 +6,6 @@ function [H, idx_inliers] = ransac_homography_adaptive_loop(x1, x2, th, max_it)
 it = 0;
 best_inliers = [];
 while it < max_it
-
     points = randomsample(Npoints, 4);
     H = homography2d(x1(:,points), x2(:,points)); % ToDo: you have to create this function
     inliers = compute_inliers(H, x1, x2, th);
@@ -43,15 +42,16 @@ function idx_inliers = compute_inliers(H, x1, x2, th)
     end
 
     % compute the symmetric geometric error
-    x1_ = H\x2;
-    x2_ = H*x1;
+    x1p = H\x2;
+    x2p = H*x1;
 
-    x1_ = [x1_(1,:)./x1_(3,:);x1_(2,:)./x1_(3,:)];
-    x2_ = [x2_(1,:)./x2_(3,:);x2_(2,:)./x2_(3,:)];
-    x1 = [x1(1,:)./x1(3,:);x1(2,:)./x1(3,:)];
-    x2 = [x2(1,:)./x2(3,:);x2(2,:)./x2(3,:)];
+    % convert to euclidean coordinates
+    x1 = euclid(x1);
+    x2 = euclid(x2);
+    x1p = euclid(x1p);
+    x2p = euclid(x2p);
 
-    d2 = sum((x1 - x1_) .^ 2) + sum((x2 - x2_) .^ 2);
+    d2 = sum(((x1 - x1p) .^ 2) + ((x2 - x2p) .^ 2));
     idx_inliers = find(d2 < th.^2);
 end
 

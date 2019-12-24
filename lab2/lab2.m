@@ -8,49 +8,29 @@ addpath('sift');
 
 %% Open images
 
-ima_path_llanes = 'Data/llanes/llanes_a.jpg';
-imb_path_llanes = 'Data/llanes/llanes_b.jpg';
-imc_path_llanes = 'Data/llanes/llanes_c.jpg';
+images_llanes = {'Data/llanes/llanes_a.jpg',
+                 'Data/llanes/llanes_b.jpg',
+                 'Data/llanes/llanes_c.jpg'};
 
-imargb = imread(ima_path_llanes);
-imbrgb = imread(imb_path_llanes);
-imcrgb = imread(imc_path_llanes);
-ima = sum(double(imargb), 3) / 3 / 255;
-imb = sum(double(imbrgb), 3) / 3 / 255;
-imc = sum(double(imcrgb), 3) / 3 / 255;
+images_castle = {'Data/castle_int/0016_s.png',
+                 'Data/castle_int/0015_s.png',
+                 'Data/castle_int/0014_s.png'};
 
-ima_path_castle = 'Data/castle_int/0016_s.png';
-imb_path_castle = 'Data/castle_int/0015_s.png';
-imc_path_castle = 'Data/castle_int/0014_s.png';
+images_site13 = {'Data/aerial/site13/frame00000.png',
+                 'Data/aerial/site13/frame00002.png',
+                 'Data/aerial/site13/frame00003.png'};
 
-% imargb_castle = imread(ima_path_castle);
-% imbrgb_castle = imread(imb_path_castle);
-% imcrgb_castle = imread(imc_path_castle);
-% ima_castle = sum(double(imargb_castle), 3) / 3 / 255;
-% imb_castle = sum(double(imbrgb_castle), 3) / 3 / 255;
-% imc_castle = sum(double(imcrgb_castle), 3) / 3 / 255;
+images_site22 = {'Data/aerial/site22/frame_00001.tif',
+                 'Data/aerial/site22/frame_00018.tif',
+                 'Data/aerial/site22/frame_00030.tif'};
 
-ima_path_site13 = 'Data/aerial/site13/frame00000.png';
-imb_path_site13 = 'Data/aerial/site13/frame00002.png';
-imc_path_site13 = 'Data/aerial/site13/frame00003.png';
+imargb = imread(images_llanes{1});
+imbrgb = imread(images_llanes{2});
+imcrgb = imread(images_llanes{3});
 
-% imargb_site13 = imread(ima_path_site13);
-% imbrgb_site13 = imread(imb_path_site13);
-% imcrgb_site13 = imread(imc_path_site13);
-% ima_site13 = sum(double(imargb_site13), 3) / 3 / 255;
-% imb_site13 = sum(double(imbrgb_site13), 3) / 3 / 255;
-% imc_site13 = sum(double(imcrgb_site13), 3) / 3 / 255;
-
-ima_path_site22 = 'Data/aerial/site22/frame_00001.tif';
-imb_path_site22 = 'Data/aerial/site22/frame_00018.tif';
-imc_path_site22 = 'Data/aerial/site22/frame_00030.tif';
-
-% imargb_site22 = double(imread(ima_path_site22));
-% imbrgb_site22 = double(imread(imb_path_site22));
-% imcrgb_site22 = double(imread(imc_path_site22));
-% ima_site22 = imargb_site22;
-% imb_site22 = imbrgb_site22;
-% imc_site22 = imcrgb_site22;
+ima = double(rgb2gray(imargb)) / 255;
+imb = double(rgb2gray(imbrgb)) / 255;
+imc = double(rgb2gray(imcrgb)) / 255;
 
 %% Compute SIFT keypoints
 [points_a, desc_a] = sift(ima, 'Threshold', 0.01);
@@ -109,19 +89,19 @@ vgg_gui_H(imbrgb, imcrgb, Hbc);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 3. Build the mosaic
 corners = [-400 1200 -100 650];
-iwb = apply_H_v2(imbrgb, eye(3), corners);   % ToDo: complete the call to the function
-iwa = apply_H_v2(imargb, Hab, corners);    % ToDo: complete the call to the function
-iwc = apply_H_v2(imcrgb, inv(Hbc), corners);    % ToDo: complete the call to the function
+iwb = apply_H_v2(imbrgb, eye(3), corners);    % ToDo: complete the call to the function
+iwa = apply_H_v2(imargb, Hab, corners);       % ToDo: complete the call to the function
+iwc = apply_H_v2(imcrgb, inv(Hbc), corners);  % ToDo: complete the call to the function
 
 figure;
-imshow(max(iwc, max(iwb, iwa))); %image(max(iwc, max(iwb, iwa)));axis off;
+imshow(max(iwc, max(iwb, iwa)));%image(max(iwc, max(iwb, iwa)));axis off;
 title('Mosaic A-B-C');
 
 %% 3.1: ToDo: compute the mosaic with castle_int images
 th = 3;
 corners = [-600 1600 -250 800];
-mosaic_castle = compute_mosaic_3(ima_path_castle, imb_path_castle, imc_path_castle, ...
-    th, corners);
+mosaic_castle = compute_mosaic_3(images_castle, th, corners);
+
 figure;
 imshow(mosaic_castle);
 title('Castle mosaic A-B-C');
@@ -129,8 +109,8 @@ title('Castle mosaic A-B-C');
 %% 3.2: ToDo: compute the mosaic with aerial images set 13
 th = 3;
 corners = [-300 1300 -100 1000];
-mosaic_site13 = compute_mosaic_3(ima_path_site13, imb_path_site13, imc_path_site13, ...
-    th, corners);
+mosaic_site13 = compute_mosaic_3(images_site13, th, corners);
+
 figure;
 imshow(mosaic_site13);
 title('Site13 mosaic A-B-C');
@@ -138,8 +118,8 @@ title('Site13 mosaic A-B-C');
 %% 3.3: ToDo: compute the mosaic with aerial images set 22
 th = 3;
 corners = [-500 1500 -100 1100];
-mosaic_site22 = compute_mosaic_3(ima_path_site22, imb_path_site22, imc_path_site22, ...
-    th, corners);
+mosaic_site22 = compute_mosaic_3(images_site22, th, corners);
+
 figure;
 imshow(mosaic_site22);
 title('Site22 mosaic A-B-C');
@@ -149,6 +129,7 @@ title('Site22 mosaic A-B-C');
 
 % COMMENTS PRESENTED IN THE LAB REPORT
 
+%{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 4. Refine the homography with the Gold Standard algorithm
 
@@ -383,6 +364,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 7. OPTIONAL: Replace the logo of the UPF by the master logo
 %%              in one of the previous images using the DLT algorithm.
-
+%}
 
 
