@@ -37,18 +37,21 @@ imc = double(rgb2gray(imcrgb)) / 255;
 [points_b, desc_b] = sift(imb, 'Threshold', 0.01);
 [points_c, desc_c] = sift(imc, 'Threshold', 0.01);
 
-figure;
-imshow(imargb);
-hold on;
-plot(points_a(1,:), points_a(2,:),'+y');
-figure;
-imshow(imbrgb);
-hold on;
-plot(points_b(1,:), points_b(2,:),'+y');
-figure;
-imshow(imcrgb);
-hold on;
-plot(points_c(1,:), points_c(2,:),'+y');
+fig1 = figure(1);
+ax1 = axes('Parent', fig1);
+imshow(imargb, [], 'Parent', ax1);
+hold(ax1, 'on');
+plot(ax1, points_a(1,:), points_a(2,:),'+y');
+fig2 = figure(2);
+ax2 = axes('Parent', fig2);
+imshow(imbrgb, [], 'Parent', ax2);
+hold(ax2, 'on');
+plot(ax2, points_b(1,:), points_b(2,:),'+y');
+fig3 = figure(3);
+ax3 = axes('Parent', fig3);
+imshow(imcrgb, [], 'Parent', ax3);
+hold(ax3, 'on');
+plot(ax3, points_c(1,:), points_c(2,:),'+y');
 
 %% Match SIFT keypoints 
 
@@ -61,6 +64,7 @@ plotmatches(ima, imb, points_a(1:2,:), points_b(1:2,:), matches_ab, 'Stacking', 
 matches_bc = siftmatch(desc_b, desc_c);
 figure;
 plotmatches(imb, imc, points_b(1:2,:), points_c(1:2,:), matches_bc, 'Stacking', 'v');
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 2. Compute the homography (DLT algorithm) between image pairs
@@ -85,6 +89,7 @@ figure;
 plotmatches(imb, imc, points_b(1:2,:), points_c(1:2,:), matches_bc(:,inliers_bc), 'Stacking', 'v');
 
 vgg_gui_H(imbrgb, imcrgb, Hbc);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 3. Build the mosaic
@@ -127,16 +132,13 @@ title('Site22 mosaic A-B-C');
 %% 3.4: ToDo: comment the results in every of the four cases: hypothetise why it works or
 %       does not work
 
-% COMMENTS PRESENTED IN THE LAB REPORT
 
-%{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 4. Refine the homography with the Gold Standard algorithm
 
 % Homography ab
-
-x = ??;  %ToDo: set the non-homogeneous point coordinates of the 
-xp = ??; %      point correspondences we will refine with the geometric method
+x = points_a(1:2, matches_ab(1,inliers_ab));  % ToDo: set the non-homogeneous point coordinates of the 
+xp = points_b(1:2, matches_ab(2,inliers_ab)); % point correspondences we will refine with the geometric method
 Xobs = [ x(:) ; xp(:) ];     % The column vector of observed values (x and x')
 P0 = [ Hab(:) ; x(:) ];      % The parameters or independent variables
 
@@ -145,7 +147,7 @@ Y_initial = gs_errfunction( P0, Xobs ); % ToDo: create this function that we nee
 % (E(X) is summed and squared implicitly in the lsqnonlin algorithm.) 
 err_initial = sum(sum( Y_initial.^2 ));
 
-options = optimset('Algorithm', 'levenberg-marquardt');
+options = optimset('Algorithm', 'levenberg-marquardt', 'Display', 'iter');
 P = lsqnonlin(@(t) gs_errfunction(t, Xobs), P0, [], [], options);
 
 Hab_r = reshape( P(1:9), 3, 3 );
@@ -155,56 +157,73 @@ err_final = sum( sum( f.^2 ));
 % we show the geometric error before and after the refinement
 fprintf(1, 'Gold standard reproj error initial %f, final %f\n', err_initial, err_final);
 
-
 %% See differences in the keypoint locations
 
 % ToDo: compute the points xhat and xhatp which are the correspondences
 % returned by the refinement with the Gold Standard algorithm
+xhat = reshape(P(9+1:end), 2, []);
+xhatp = euclid(Hab_r*[xhat; ones(1, length(xhat))]);
 
-figure;
-imshow(imargb);%image(imargb);
-hold on;
-plot(x(1,:), x(2,:),'+y');
-plot(xhat(1,:), xhat(2,:),'+c');
+fig1 = figure(1);
+ax1 = axes('Parent', fig1);
+imshow(imargb, [], 'Parent', ax1);
+hold(ax1, 'on');
+plot(ax1, x(1,:), x(2,:),'+y');
+plot(ax1, xhat(1,:), xhat(2,:),'+c');
 
-figure;
-imshow(imbrgb);%image(imbrgb);
-hold on;
-plot(xp(1,:), xp(2,:),'+y');
-plot(xhatp(1,:), xhatp(2,:),'+c');
+fig2 = figure(2);
+ax2 = axes('Parent', fig2);
+imshow(imbrgb, [], 'Parent', ax2);
+hold(ax2, 'on');
+plot(ax2, xp(1,:), xp(2,:),'+y');
+plot(ax2, xhatp(1,:), xhatp(2,:),'+c');
 
 %%  Homography bc
 
 % ToDo: refine the homography bc with the Gold Standard algorithm
+x = points_b(1:2, matches_bc(1,inliers_bc));
+xp = points_c(1:2, matches_bc(2,inliers_bc));
+Xobs = [ x(:) ; xp(:) ];
+P0 = [ Hbc(:) ; x(:) ];
 
+options = optimset('Algorithm', 'levenberg-marquardt', 'Display', 'iter');
+P = lsqnonlin(@(t) gs_errfunction(t, Xobs), P0, [], [], options);
+
+Hbc_r = reshape( P(1:9), 3, 3 );
 
 %% See differences in the keypoint locations
 
 % ToDo: compute the points xhat and xhatp which are the correspondences
 % returned by the refinement with the Gold Standard algorithm
+xhat = reshape(P(9+1:end), 2, []);
+xhatp = euclid(Hbc_r*[xhat; ones(1, length(xhat))]);
 
-figure;
-imshow(imbrgb);%image(imbrgb);
-hold on;
-plot(x(1,:), x(2,:),'+y');
-plot(xhat(1,:), xhat(2,:),'+c');
+fig1 = figure(1);
+ax1 = axes('Parent', fig1);
+imshow(imbrgb, [], 'Parent', ax1);
+hold(ax1, 'on');
+plot(ax1, x(1,:), x(2,:),'+y');
+plot(ax1, xhat(1,:), xhat(2,:),'+c');
 
-figure;
-imshow(imcrgb);%image(imcrgb);
-hold on;
-plot(xp(1,:), xp(2,:),'+y');
-plot(xhatp(1,:), xhatp(2,:),'+c');
+fig2 = figure(2);
+ax2 = axes('Parent', fig2);
+imshow(imcrgb, [], 'Parent', ax2);
+hold(ax2, 'on');
+plot(ax2, xp(1,:), xp(2,:),'+y');
+plot(ax2, xhatp(1,:), xhatp(2,:),'+c');
 
 %% Build mosaic
 corners = [-400 1200 -100 650];
-iwb = apply_H_v2(imbrgb, ??, corners); % ToDo: complete the call to the function
-iwa = apply_H_v2(imargb, ??, corners); % ToDo: complete the call to the function
-iwc = apply_H_v2(imcrgb, ??, corners); % ToDo: complete the call to the function
+iwb = apply_H_v2(imbrgb, eye(3), corners); % ToDo: complete the call to the function
+iwa = apply_H_v2(imargb, Hab_r, corners); % ToDo: complete the call to the function
+iwc = apply_H_v2(imcrgb, inv(Hbc_r), corners); % ToDo: complete the call to the function
 
 figure;
 imshow(max(iwc, max(iwb, iwa)));%image(max(iwc, max(iwb, iwa)));axis off;
 title('Mosaic A-B-C');
 
+
+%{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 5. OPTIONAL: Calibration with a planar pattern
 
