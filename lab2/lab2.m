@@ -58,15 +58,15 @@ imc_path_site22 = 'Data/aerial/site22/frame_00030.tif';
 [points_c, desc_c] = sift(imc, 'Threshold', 0.01);
 
 figure;
-imshow(imargb);%image(imargb)
+imshow(imargb);
 hold on;
 plot(points_a(1,:), points_a(2,:),'+y');
 figure;
-imshow(imbrgb);%image(imbrgb);
+imshow(imbrgb);
 hold on;
 plot(points_b(1,:), points_b(2,:),'+y');
 figure;
-imshow(imcrgb);%image(imcrgb);
+imshow(imcrgb);
 hold on;
 plot(points_c(1,:), points_c(2,:),'+y');
 
@@ -265,10 +265,10 @@ for i = 1:N
     fprintf('done\n');
 
     % Fit homography and remove outliers.
-    x1 = pointsT(1:2, matches(1, :));
-    x2 = points{i}(1:2, matches(2, :));
+    x1 = [pointsT(1:2, matches(1, :)); ones(1, length(matches))];
+    x2 = [points{i}(1:2, matches(2, :)); ones(1, length(matches))];
     H{i} = 0;
-    [H{i}, inliers] =  ransac_homography_adaptive_loop(homog(x1), homog(x2), 3, 1000);
+    [H{i}, inliers] =  ransac_homography_adaptive_loop(x1, x2, 3, 1000);
 
     % Plot inliers.
     figure;
@@ -280,14 +280,34 @@ end
 
 %% Compute the Image of the Absolute Conic
 
-w = ?? % ToDo
+for i = 1:N
+    v12 = [H{i}(1,1)*H{i}(1,2), H{i}(1,1)*H{i}(2,2) + H{i}(2,1)*H{i}(1,2), ...
+        H{i}(1,1)*H{i}(3,2) + H{i}(3,1)*H{i}(1,2), H{i}(2,1)*H{i}(2,2), ...
+        H{i}(2,1)*H{i}(3,2) + H{i}(3,1)*H{i}(2,2), H{i}(3,1)*H{i}(3,2)];
+    v11 = [H{i}(1,1)*H{i}(1,1), H{i}(1,1)*H{i}(2,1) + H{i}(2,1)*H{i}(1,1), ...
+        H{i}(1,1)*H{i}(3,1) + H{i}(3,1)*H{i}(1,1), H{i}(2,1)*H{i}(2,1), ...
+        H{i}(2,1)*H{i}(3,1) + H{i}(3,1)*H{i}(2,1), H{i}(3,1)*H{i}(3,1)];
+    v22 = [H{i}(1,2)*H{i}(1,2), H{i}(1,2)*H{i}(2,2) + H{i}(2,2)*H{i}(1,2), ...
+        H{i}(1,2)*H{i}(3,2) + H{i}(3,2)*H{i}(1,2), H{i}(2,2)*H{i}(2,2), ...
+        H{i}(2,2)*H{i}(3,2) + H{i}(3,2)*H{i}(2,2), H{i}(3,2)*H{i}(3,2)];
+    V(2*i-1,:) = v12;
+    V(2*i,:) = v11 - v22;
+end
+
+[~,~,V] = svd(V);
+w = [V(1,end), V(2,end), V(3,end);
+     V(2,end), V(4,end), V(5,end);
+     V(3,end), V(5,end), V(6,end)];
  
 %% Recover the camera calibration.
 
-K = ?? % ToDo
+KKt = inv(w);
+K = chol(KKt);
     
 % ToDo: in the report make some comments related to the obtained internal
 %       camera parameters and also comment their relation to the image size
+
+% COMMENTS PRESENTED IN THE LAB REPORT
 
 %% Compute camera position and orientation.
 R = cell(N,1);
@@ -296,9 +316,9 @@ P = cell(N,1);
 figure;hold;
 for i = 1:N
     % ToDo: compute r1, r2, and t{i}
-    r1 = ??
-    r2 = ??
-    t{i} = ??
+    r1 = K\H{i}(:,1);
+    r2 = K\H{i}(:,2);
+    t{i} = K\H{i}(:,3);
     
     % Solve the scale ambiguity by forcing r1 and r2 to be unit vectors.
     s = sqrt(norm(r1) * norm(r2)) * sign(t{i}(3));
