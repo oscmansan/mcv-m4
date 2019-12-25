@@ -33,9 +33,9 @@ imb = double(rgb2gray(imbrgb)) / 255;
 imc = double(rgb2gray(imcrgb)) / 255;
 
 %% Compute SIFT keypoints
-[points_a, desc_a] = sift(ima, 'Threshold', 0.01);
-[points_b, desc_b] = sift(imb, 'Threshold', 0.01);
-[points_c, desc_c] = sift(imc, 'Threshold', 0.01);
+[points_a, desc_a] = sift(ima, 'Threshold', 0.01, 'Verbosity', 1);
+[points_b, desc_b] = sift(imb, 'Threshold', 0.01, 'Verbosity', 1);
+[points_c, desc_c] = sift(imc, 'Threshold', 0.01, 'Verbosity', 1);
 
 fig1 = figure(1);
 ax1 = axes('Parent', fig1);
