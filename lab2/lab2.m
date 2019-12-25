@@ -222,8 +222,6 @@ figure;
 imshow(max(iwc, max(iwb, iwa)));%image(max(iwc, max(iwb, iwa)));axis off;
 title('Mosaic A-B-C');
 
-
-%{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 5. OPTIONAL: Calibration with a planar pattern
 
@@ -338,6 +336,8 @@ end
 % ToDo: in the report explain how the optical center is computed in the
 %       provided code
 
+% COMMENTS PRESENTED IN THE LAB REPORT
+
 [ny,nx] = size(T);
 p1 = [0 0 0]';
 p2 = [nx 0 0]';
@@ -355,8 +355,11 @@ figure; hold;
 plot_camera(K * eye(3,4), 800, 600, 200);
 % ToDo: complete the call to the following function with the proper
 %       coordinates of the image corners in the new reference system
+corners = [p1, p2, p3, p4, p1;
+           ones(1,5)];
 for i = 1:N
-    vgg_scatter_plot( [?? ?? ?? ?? ??], 'r');
+    Z = [inv(R{i}), t{i}];
+    vgg_scatter_plot( Z*corners, 'r');
 end
 
 %% Augmented reality: Plot some 3D points on every camera.
@@ -364,15 +367,15 @@ end
 cube = [0 0 0; 1 0 0; 1 0 0; 1 1 0; 1 1 0; 0 1 0; 0 1 0; 0 0 0; 0 0 1; 1 0 1; 1 0 1; 1 1 1; 1 1 1; 0 1 1; 0 1 1; 0 0 1; 0 0 0; 1 0 0; 1 0 0; 1 0 1; 1 0 1; 0 0 1; 0 0 1; 0 0 0; 0 1 0; 1 1 0; 1 1 0; 1 1 1; 1 1 1; 0 1 1; 0 1 1; 0 1 0; 0 0 0; 0 1 0; 0 1 0; 0 1 1; 0 1 1; 0 0 1; 0 0 1; 0 0 0; 1 0 0; 1 1 0; 1 1 0; 1 1 1; 1 1 1; 1 0 1; 1 0 1; 1 0 0 ]';
 
 X = (cube - .5) * Tw / 4 + repmat([Tw / 2; Th / 2; -Tw / 8], 1, length(cube));
+X = [X; ones(1, length(X))];
 
 for i = 1:N
     figure; colormap(gray);
     imagesc(Ig{i});
     hold on;
-    x = euclid(P{i} * homog(X));
+    x = euclid(P{i} * X);
     vgg_scatter_plot(x, 'g');
 end
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -383,6 +386,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 7. OPTIONAL: Replace the logo of the UPF by the master logo
 %%              in one of the previous images using the DLT algorithm.
-%}
+
 
 
