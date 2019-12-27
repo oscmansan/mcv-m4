@@ -132,6 +132,8 @@ title('Site22 mosaic A-B-C');
 %% 3.4: ToDo: comment the results in every of the four cases: hypothetise why it works or
 %       does not work
 
+% COMMENTS PRESENTED IN THE LAB REPORT
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 4. Refine the homography with the Gold Standard algorithm
@@ -222,6 +224,7 @@ figure;
 imshow(max(iwc, max(iwb, iwa)));%image(max(iwc, max(iwb, iwa)));axis off;
 title('Mosaic A-B-C');
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 5. OPTIONAL: Calibration with a planar pattern
 
@@ -243,14 +246,14 @@ N = length(I);
 
 %% Compute keypoints.
 fprintf('Computing sift points in template... ');
-[pointsT, descrT] = sift(Tg, 'Threshold', 0.05);
+[pointsT, descrT] = sift(Tg, 'Threshold', 0.05, 'Verbosity', 1);
 fprintf(' done\n');
 
 points = cell(N,1);
 descr = cell(N,1);
 for i = 1:N
     fprintf('Computing sift points in image %d... ', i);
-    [points{i}, descr{i}] = sift(Ig{i}, 'Threshold', 0.05);
+    [points{i}, descr{i}] = sift(Ig{i}, 'Threshold', 0.05, 'Verbosity', 1);
     fprintf(' done\n');
 end
 
@@ -263,8 +266,8 @@ for i = 1:N
     fprintf('done\n');
 
     % Fit homography and remove outliers.
-    x1 = [pointsT(1:2, matches(1, :)); ones(1, length(matches))];
-    x2 = [points{i}(1:2, matches(2, :)); ones(1, length(matches))];
+    x1 = [pointsT(1:2, matches(1,:)); ones(1, length(matches))];
+    x2 = [points{i}(1:2, matches(2,:)); ones(1, length(matches))];
     H{i} = 0;
     [H{i}, inliers] =  ransac_homography_adaptive_loop(x1, x2, 3, 1000);
 
@@ -278,29 +281,25 @@ end
 
 %% Compute the Image of the Absolute Conic
 
+Vij = @(H,i,j) [H(1,i)*H(1,j), H(1,i)*H(2,j)+H(2,i)*H(1,j), ...
+                H(1,i)*H(3,j)+H(3,i)*H(1,j), H(2,i)*H(2,j), ...
+                H(2,i)*H(3,j)+H(3,i)*H(2,j), H(3,i)*H(3,j)];
+V = zeros(2*N, 6);
 for i = 1:N
-    v12 = [H{i}(1,1)*H{i}(1,2), H{i}(1,1)*H{i}(2,2) + H{i}(2,1)*H{i}(1,2), ...
-        H{i}(1,1)*H{i}(3,2) + H{i}(3,1)*H{i}(1,2), H{i}(2,1)*H{i}(2,2), ...
-        H{i}(2,1)*H{i}(3,2) + H{i}(3,1)*H{i}(2,2), H{i}(3,1)*H{i}(3,2)];
-    v11 = [H{i}(1,1)*H{i}(1,1), H{i}(1,1)*H{i}(2,1) + H{i}(2,1)*H{i}(1,1), ...
-        H{i}(1,1)*H{i}(3,1) + H{i}(3,1)*H{i}(1,1), H{i}(2,1)*H{i}(2,1), ...
-        H{i}(2,1)*H{i}(3,1) + H{i}(3,1)*H{i}(2,1), H{i}(3,1)*H{i}(3,1)];
-    v22 = [H{i}(1,2)*H{i}(1,2), H{i}(1,2)*H{i}(2,2) + H{i}(2,2)*H{i}(1,2), ...
-        H{i}(1,2)*H{i}(3,2) + H{i}(3,2)*H{i}(1,2), H{i}(2,2)*H{i}(2,2), ...
-        H{i}(2,2)*H{i}(3,2) + H{i}(3,2)*H{i}(2,2), H{i}(3,2)*H{i}(3,2)];
-    V(2*i-1,:) = v12;
-    V(2*i,:) = v11 - v22;
+    V(2*i-1,:) = Vij(H{i},1,2);
+    V(2*i,:) = Vij(H{i},1,1) - Vij(H{i},2,2);
 end
 
 [~,~,V] = svd(V);
-w = [V(1,end), V(2,end), V(3,end);
-     V(2,end), V(4,end), V(5,end);
-     V(3,end), V(5,end), V(6,end)];
+o = V(:,end);
+w = [o(1), o(2), o(3);
+     o(2), o(4), o(5);
+     o(3), o(5), o(6)];
  
 %% Recover the camera calibration.
 
 KKt = inv(w);
-K = chol(KKt);
+K = chol(KKt);  % shouldn't we use the lower triangular?
     
 % ToDo: in the report make some comments related to the obtained internal
 %       camera parameters and also comment their relation to the image size
@@ -314,9 +313,9 @@ P = cell(N,1);
 figure;hold;
 for i = 1:N
     % ToDo: compute r1, r2, and t{i}
-    r1 = K\H{i}(:,1);
-    r2 = K\H{i}(:,2);
-    t{i} = K\H{i}(:,3);
+    r1 = K \ H{i}(:,1);
+    r2 = K \ H{i}(:,2);
+    t{i} = K \ H{i}(:,3);
     
     % Solve the scale ambiguity by forcing r1 and r2 to be unit vectors.
     s = sqrt(norm(r1) * norm(r2)) * sign(t{i}(3));
@@ -326,10 +325,10 @@ for i = 1:N
     R{i} = [r1, r2, cross(r1,r2)];
     
     % Ensure R is a rotation matrix
-    [U S V] = svd(R{i});
+    [U, S, V] = svd(R{i});
     R{i} = U * eye(3) * V';
    
-    P{i} = K * [R{i} t{i}];
+    P{i} = K * [R{i}, t{i}];
     plot_camera(P{i}, 800, 600, 200);
 end
 
@@ -339,14 +338,14 @@ end
 % COMMENTS PRESENTED IN THE LAB REPORT
 
 [ny,nx] = size(T);
-p1 = [0 0 0]';
-p2 = [nx 0 0]';
-p3 = [nx ny 0]';
-p4 = [0 ny 0]';
+p1 = [-nx/2 -ny/2 0]';
+p2 = [nx/2 -ny/2 0]';
+p3 = [nx/2 ny/2 0]';
+p4 = [-nx/2 ny/2 0]';
 % Draw planar pattern
 vgg_scatter_plot([p1 p2 p3 p4 p1], 'g');
 % Paint image texture
-surface('XData',[0 nx; 0 nx],'YData',[0 0; 0 0],'ZData',[0 0; -ny -ny],'CData',T,'FaceColor','texturemap');
+surface('XData',[-nx/2, nx/2; -nx/2, nx/2],'YData',[0 0; 0 0],'ZData',[ny/2, ny/2; -ny/2, -ny/2],'CData',T,'FaceColor','texturemap');
 colormap(gray);
 axis equal;
 
@@ -355,11 +354,9 @@ figure; hold;
 plot_camera(K * eye(3,4), 800, 600, 200);
 % ToDo: complete the call to the following function with the proper
 %       coordinates of the image corners in the new reference system
-corners = [p1, p2, p3, p4, p1;
-           ones(1,5)];
+corners = [p1, p2, p3, p4, p1; ones(1,5)];
 for i = 1:N
-    Z = [inv(R{i}), t{i}];
-    vgg_scatter_plot( Z*corners, 'r');
+    vgg_scatter_plot([R{i},t{i}] * corners, 'r');
 end
 
 %% Augmented reality: Plot some 3D points on every camera.
