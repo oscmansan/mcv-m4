@@ -384,7 +384,7 @@ end
 img_dst = imread('Data/logos/UPFbuilding.jpg');
 img_src = imread('Data/logos/logo_master.png');
 
-%corners coordinates of logo in the building image
+% corners coordinates of logo in the building image
 pts_dst = [321, 423, 310, 416;
            47,   65, 123, 134]; 
 
@@ -428,5 +428,12 @@ plotmatches(img_match_gray, img_dest_gray, points_a(1:2,:), points_b(1:2,:), mat
 %% 7. OPTIONAL: Replace the logo of the UPF by the master logo
 %%              in one of the previous images using the DLT algorithm.
 
+% Automatic Replacement
+[h,w,c] = size(img_dst_auto);
+corners = [0 w-1 0 h-1];
 
+warp_src = apply_H_v2(img_src_auto, Hab, corners);
+merge = max(img_dst_auto, warp_src);
+figure;
+imshow(merge)
 
