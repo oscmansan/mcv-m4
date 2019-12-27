@@ -380,17 +380,23 @@ end
 %%              DLT algorithm (folder "logos").
 %%              Interpret and comment the results.
 
+clear all;
+close all;
+
 % Manual Keypoints Detection
-img_dst = imread('Data/logos/UPFbuilding.jpg');
+
+% img_dst = imread('Data/logos/UPFbuilding.jpg');
+img_dst = imread('Data/logos/UPFstand.jpg');
 img_src = imread('Data/logos/logo_master.png');
 
 % corners coordinates of logo in the building image
-pts_dst = [321, 423, 310, 416;
-           47,   65, 123, 134]; 
+load points.mat points;
+% pts_dst = points(1:2,:); % building
+pts_dst = points(3:4,:); % stand
 
 [h,w,c] = size(img_src);
-pts_src = [0, w, w,  0;
-           0,  0,   h, h];
+pts_src = [0, w, w, 0;
+           0, 0, h, h;];
 
 figure;
 imshow(img_dst);
@@ -398,15 +404,19 @@ hold on;
 plot(pts_dst(1,:), pts_dst(2,:),'+y');
 hold off;
 
-%TODO: complete with match from manual keypoints detection
+homogeneous = ones(1,length(pts_dst));
+pts_dst_homo = [pts_dst; homogeneous];
+pts_src_homo = [pts_src; homogeneous];
+H_manual = homography2d(pts_src_homo, pts_dst_homo);
 
 % Auto Keypoints Detection
+% img_dst_auto = imread('Data/logos/UPFbuilding.jpg');
 img_dst_auto = imread('Data/logos/UPFstand.jpg');
-img_match_auto = imread('Data/logos/logoUPF.png');
 img_src_auto = imread('Data/logos/logo_master.png');
+img_match_auto = imread('Data/logos/logoUPF.png');
 
 [rows, cols, a] = size(img_match_auto);
-img_src_auto =  imresize(img_src_auto, [rows cols]);
+img_src_auto = imresize(img_src_auto, [rows cols]);
 
 img_dest_gray = double(rgb2gray(img_dst_auto)) / 255;
 img_match_gray = double(rgb2gray(img_match_auto)) / 255;
@@ -428,12 +438,21 @@ plotmatches(img_match_gray, img_dest_gray, points_a(1:2,:), points_b(1:2,:), mat
 %% 7. OPTIONAL: Replace the logo of the UPF by the master logo
 %%              in one of the previous images using the DLT algorithm.
 
+% Manual Replacement
+[h,w,c] = size(img_dst);
+corners = [0 w-1 0 h-1];
+
+warp_src = apply_H_v2(img_src, H_manual, corners);
+merge = max(warp_src, img_dst);
+figure;
+imshow(merge);
+title('Manual Detection');
+
 % Automatic Replacement
 [h,w,c] = size(img_dst_auto);
 corners = [0 w-1 0 h-1];
-
-warp_src = apply_H_v2(img_src_auto, Hab, corners);
-merge = max(img_dst_auto, warp_src);
+transf_automatic = apply_H_v2(img_src_auto, Hab, corners);
+merge = max(transf_automatic, img_dst_auto);
 figure;
 imshow(merge)
-
+title('Automatic Detection')
