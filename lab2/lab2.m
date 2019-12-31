@@ -380,59 +380,59 @@ end
 %%              DLT algorithm (folder "logos").
 %%              Interpret and comment the results.
 
-clear all;
 close all;
+addpath('sift');
 
 % Manual Keypoints Detection
 
-% img_dst = imread('Data/logos/UPFbuilding.jpg');
+%img_dst = imread('Data/logos/UPFbuilding.jpg');
 img_dst = imread('Data/logos/UPFstand.jpg');
 img_src = imread('Data/logos/logo_master.png');
+img_match = imread('Data/logos/logoUPF.png');
+img_match_gray = double(rgb2gray(img_match)) / 255;
+img_dst_gray = double(rgb2gray(img_dst)) / 255;
 
 % corners coordinates of logo in the building image
 load points.mat points;
 % pts_dst = points(1:2,:); % building
 pts_dst = points(3:4,:); % stand
 
-[h,w,c] = size(img_src);
+[h,w,c] = size(img_match);
 pts_src = [0, w, w, 0;
            0, 0, h, h;];
-
-figure;
-imshow(img_dst);
-hold on;
-plot(pts_dst(1,:), pts_dst(2,:),'+y');
-hold off;
 
 homogeneous = ones(1,length(pts_dst));
 pts_dst_homo = [pts_dst; homogeneous];
 pts_src_homo = [pts_src; homogeneous];
-H_manual = homography2d(pts_src_homo, pts_dst_homo);
-
-% Auto Keypoints Detection
-% img_dst_auto = imread('Data/logos/UPFbuilding.jpg');
-img_dst_auto = imread('Data/logos/UPFstand.jpg');
-img_src_auto = imread('Data/logos/logo_master.png');
-img_match_auto = imread('Data/logos/logoUPF.png');
-
-[rows, cols, a] = size(img_match_auto);
-img_src_auto = imresize(img_src_auto, [rows cols]);
-
-img_dest_gray = double(rgb2gray(img_dst_auto)) / 255;
-img_match_gray = double(rgb2gray(img_match_auto)) / 255;
-
-% Compute and match SIFT keypoints
-[points_a, desc_a] = sift(img_match_gray, 'Threshold', 0.01);
-[points_b, desc_b] = sift(img_dest_gray, 'Threshold', 0.01);
-matches_ab = siftmatch(desc_a, desc_b);
-
-%Fit homography and remove outliers
-pts_src_auto = [points_a(1:2, matches_ab(1,:)); ones(1, length(matches_ab))];
-pts_dst_auto = [points_b(1:2, matches_ab(2,:)); ones(1, length(matches_ab))];
-[Hab, inliers_ab] = ransac_homography_adaptive_loop(pts_src_auto, pts_dst_auto, 3, 1000);
+[H_manual, inliers_manual] = ransac_homography_adaptive_loop(pts_src_homo, pts_dst_homo, 3, 1000);
 
 figure;
-plotmatches(img_match_gray, img_dest_gray, points_a(1:2,:), points_b(1:2,:), matches_ab(:,inliers_ab), 'Stacking', 'v');
+plotmatches_manual(img_match_gray, img_dst_gray, pts_src, pts_dst, inliers_manual);
+
+% % Auto Keypoints Detection
+% img_dst_auto = imread('Data/logos/UPFbuilding.jpg');
+% % img_dst_auto = imread('Data/logos/UPFstand.jpg');
+% img_src_auto = imread('Data/logos/logo_master.png');
+% img_match_auto = imread('Data/logos/logoUPF.png');
+% 
+% [rows, cols, a] = size(img_match_auto);
+% img_src_auto = imresize(img_src_auto, [rows cols]);
+% 
+% img_dest_gray = double(rgb2gray(img_dst_auto)) / 255;
+% img_match_gray = double(rgb2gray(img_match_auto)) / 255;
+% 
+% % Compute and match SIFT keypoints
+% [points_a, desc_a] = sift(img_match_gray, 'Threshold', 0.01);
+% [points_b, desc_b] = sift(img_dest_gray, 'Threshold', 0.01);
+% matches_ab = siftmatch(desc_a, desc_b);
+% 
+% %Fit homography and remove outliers
+% pts_src_auto = [points_a(1:2, matches_ab(1,:)); ones(1, length(matches_ab))];
+% pts_dst_auto = [points_b(1:2, matches_ab(2,:)); ones(1, length(matches_ab))];
+% [Hab, inliers_ab] = ransac_homography_adaptive_loop(pts_src_auto, pts_dst_auto, 3, 1000);
+% 
+% figure;
+% plotmatches(img_match_gray, img_dest_gray, points_a(1:2,:), points_b(1:2,:), matches_ab(:,inliers_ab), 'Stacking', 'v');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 7. OPTIONAL: Replace the logo of the UPF by the master logo
