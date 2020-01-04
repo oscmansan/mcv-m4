@@ -380,78 +380,51 @@ end
 %%              DLT algorithm (folder "logos").
 %%              Interpret and comment the results.
 
-close all;
+clear all;
 
-% Manual Keypoints Detection
+upf_building = imread('Data/logos/UPFbuilding.jpg');
+upf_stand = imread('Data/logos/UPFstand.jpg');
+upf_logo = imread('Data/logos/logoUPF.png');
+mcv_logo = imread('Data/logos/logo_master.png');
 
-%img_dst = imread('Data/logos/UPFbuilding.jpg');
-img_dst = imread('Data/logos/UPFstand.jpg');
-img_src = imread('Data/logos/logo_master.png');
-img_match = imread('Data/logos/logoUPF.png');
-img_match_gray = double(rgb2gray(img_match)) / 255;
-img_dst_gray = double(rgb2gray(img_dst)) / 255;
+%img_dst = upf_building;
+img_dst = upf_stand;
 
-% corners coordinates of logo in the building image
-load points.mat points;
-% pts_dst = points(1:2,:); % building
-pts_dst = points(3:4,:); % stand
+% compute homography between the logo and the image
+H = dlt(upf_logo, img_dst);
 
-[h,w,c] = size(img_match);
-pts_src = [0, w, w, 0;
-           0, 0, h, h;];
+% find logo corners in the image
+[nRows, nCols, ~] = size(upf_logo);
+top_left = euclid(H * [1; 1; 1]);
+top_right = euclid(H * [1; nCols; 1]);
+bot_right = euclid(H * [nRows; nCols; 1]);
+bot_left = euclid(H * [nRows; 1; 1]);
+corners = [top_left, top_right, bot_right, bot_left];
 
-homogeneous = ones(1,length(pts_dst));
-pts_dst_homo = [pts_dst; homogeneous];
-pts_src_homo = [pts_src; homogeneous];
-[H_manual, inliers_manual] = ransac_homography_adaptive_loop(pts_src_homo, pts_dst_homo, 3, 1000);
+% plot logo position in the image
+figure();
+imshow(img_dst);
+hold on;
+ps = polyshape(corners(1,:),corners(2,:));
+pg = plot(ps);
+pg.FaceColor = 'g';
+pg.EdgeColor = 'w';
 
-figure;
-plotmatches_manual(img_match_gray, img_dst_gray, pts_src, pts_dst, inliers_manual);
-
-% Auto Keypoints Detection
-img_dst_auto = imread('Data/logos/UPFbuilding.jpg');
-% img_dst_auto = imread('Data/logos/UPFstand.jpg');
-img_src_auto = imread('Data/logos/logo_master.png');
-img_match_auto = imread('Data/logos/logoUPF.png');
-
-[rows, cols, a] = size(img_match_auto);
-img_src_auto = imresize(img_src_auto, [rows cols]);
-
-img_dest_gray = double(rgb2gray(img_dst_auto)) / 255;
-img_match_gray = double(rgb2gray(img_match_auto)) / 255;
-
-% Compute and match SIFT keypoints
-[points_a, desc_a] = sift(img_match_gray, 'Threshold', 0.01);
-[points_b, desc_b] = sift(img_dest_gray, 'Threshold', 0.01);
-matches_ab = siftmatch(desc_a, desc_b);
-
-%Fit homography and remove outliers
-pts_src_auto = [points_a(1:2, matches_ab(1,:)); ones(1, length(matches_ab))];
-pts_dst_auto = [points_b(1:2, matches_ab(2,:)); ones(1, length(matches_ab))];
-[Hab, inliers_ab] = ransac_homography_adaptive_loop(pts_src_auto, pts_dst_auto, 3, 1000);
-
-figure;
-plotmatches(img_match_gray, img_dest_gray, points_a(1:2,:), points_b(1:2,:), matches_ab(:,inliers_ab), 'Stacking', 'v');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 7. OPTIONAL: Replace the logo of the UPF by the master logo
 %%              in one of the previous images using the DLT algorithm.
 
-% Manual Replacement
-[h,w,c] = size(img_dst);
-corners = [0 w-1 0 h-1];
+% modify homography to account for the size of the new logo
+s = size(upf_logo) ./ size(mcv_logo);
+S = [s(2), 0, 0; 0, s(1), 0; 0, 0, 1];
+H = H*S;
 
-warp_src = apply_H_v2(img_src, H_manual, corners);
-merge = max(warp_src, img_dst);
-figure;
-imshow(merge);
-title('Manual Detection');
+% apply homography to logo and merge with the image
+[nRows, nCols, ~] = size(img_dst);
+mcv_logo_dst = apply_H_v2(mcv_logo, H, [1, nCols, 1, nRows]);
+result = max(img_dst, mcv_logo_dst);
 
-% Automatic Replacement
-[h,w,c] = size(img_dst_auto);
-corners = [0 w-1 0 h-1];
-transf_automatic = apply_H_v2(img_src_auto, Hab, corners);
-merge = max(transf_automatic, img_dst_auto);
-figure;
-imshow(merge)
-title('Automatic Detection')
+figure();
+imshow(result);
+
