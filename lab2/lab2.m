@@ -390,6 +390,32 @@ mcv_logo = imread('Data/logos/logo_master.png');
 %img_dst = upf_building;
 img_dst = upf_stand;
 
+%% Manual keypoints detection
+% corners coordinates of logo in the building image
+load points.mat points;
+%pts_dst = points(1:2,:); % building
+pts_dst = points(3:4,:); % stand
+
+[h,w,c] = size(upf_logo);
+pts_src = [0, w, w, 0;
+           0, 0, h, h];
+
+pts_dst = [pts_dst; ones(1, length(pts_dst))];
+pts_src = [pts_src; ones(1, length(pts_src))];
+[H, ~] = ransac_homography_adaptive_loop(pts_src, pts_dst, 3, 1000);
+
+corners = euclid(H * pts_src);
+
+% plot logo position in the image
+figure();
+imshow(img_dst);
+hold on;
+ps = polyshape(corners(1,:),corners(2,:));
+pg = plot(ps);
+pg.FaceColor = 'g';
+pg.EdgeColor = 'w';
+
+%% Automatic keypoints detection
 % compute homography between the logo and the image
 H = dlt(upf_logo, img_dst);
 
