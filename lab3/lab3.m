@@ -26,19 +26,14 @@ F_es = fundamental_matrix(x1_test, x2_test);
 % ToDo: write the expression of the real fundamental matrix for P1 and P2
 F_gt = [0, -t(3), t(2);
         t(3), 0, -t(1);
-        -t(2), t(1), 0] * R;
+        -t(2), t(1), 0] * R;  % inv(Kp).' * [tp]_x * R * inv(K), where K = eye(3,3)
 
 % Evaluation: these two matrices should be very similar
-F_es_norm = F_es / norm(F_es);
-F_gt_norm = F_gt / norm(F_gt);
+F_es = F_es / norm(F_es);
+F_gt = F_gt / norm(F_gt);
 
-    % As the sign can be different, we compare the two matrices by
-    % subtraction and addition
-if sum(sum(F_es_norm-F_gt_norm)) < 1e-10 || sum(sum(F_es_norm+F_gt_norm)) < 1e-10
-    disp('EVALUATION OK! THE TWO MATRICES ARE VERY SIMILAR')
-else
-    disp('EVALUATION NOT OK! THE TWO MATRICES ARE DIFFERENT')
-end
+% Since F is up-to-scale, the sign might be inverted
+assert(iscloseall(F_es,F_gt) || iscloseall(-F_es,F_gt));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 2. Robustly fit fundamental matrix
