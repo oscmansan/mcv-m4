@@ -44,7 +44,7 @@ N = length(x1);
 
 x2tFx1 = zeros(1,N);
 for i = 1:N
-    x2tFx1(i) = x2(:,i)'*F*x1(:,i);
+    x2tFx1(i) = x2(:,i).'*F*x1(:,i);
 end
 
 Fx1 = F*x1;
