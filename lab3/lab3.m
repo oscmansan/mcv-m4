@@ -240,7 +240,6 @@ plot(t, -(l4(1)*t + l4(3)) / l4(2), 'g');
 pi4 = cross(l1,l4);
 plot(pi4(1)/pi4(3), pi4(2)/pi4(3), 'g*');
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 4. OPTIONAL: Photo-sequencing with your own images
 
@@ -252,3 +251,107 @@ plot(pi4(1)/pi4(3), pi4(2)/pi4(3), 'g*');
 %     Photo-sequencing paper with a selection of the detected dynamic
 %     features. You may reuse the code generated for the previous question.
 %
+addpath('../lab2/sift');
+
+% Read Image
+im1rgb=imread('Data/SkateBoard/IMG0_002.png');
+im2rgb=imread('Data/SkateBoard/IMG0_009.png');
+im3rgb=imread('Data/SkateBoard/IMG0_003.png');
+im4rgb=imread('Data/SkateBoard/IMG0_004.png');
+
+% gray
+reference = double(rgb2gray(im1rgb)) / 255;
+base = double(rgb2gray(im2rgb)) / 255;
+frame01 = double(rgb2gray(im3rgb)) / 255;
+frame02 = double(rgb2gray(im4rgb)) / 255;
+
+figure;
+subplot(2,2,1); imshow(reference); axis image; title('Reference image');
+subplot(2,2,2); imshow(base); axis image; title('Base image');
+subplot(2,2,3); imshow(frame01); axis image; title('3rd image');
+subplot(2,2,4); imshow(frame02); axis image; title('4rd image');
+
+% sift
+[points_1, desc_1] = sift(reference, 'Threshold', 0.015);
+[points_2, desc_2] = sift(base, 'Threshold', 0.015);
+[points_3, desc_3] = sift(frame01, 'Threshold', 0.015);
+[points_4, desc_4] = sift(frame02, 'Threshold', 0.015);
+
+%% Algorithm 1
+
+% Match images
+match_reference_base = siftmatch(desc_1, desc_2);
+match_reference_3 = siftmatch(desc_1, desc_3);
+match_reference_4 = siftmatch(desc_1, desc_4);
+
+% Compute Fundamental Matrices
+p1 = [points_1(1:2, match_reference_base(1,:)); ones(1, length(match_reference_base))];
+p2 = [points_2(1:2, match_reference_base(2,:)); ones(1, length(match_reference_base))];
+[F_base, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
+
+p1 = [points_1(1:2, match_reference_3(1,:)); ones(1, length(match_reference_3))];
+p2 = [points_3(1:2, match_reference_3(2,:)); ones(1, length(match_reference_3))];
+[F_3, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
+
+p1 = [points_1(1:2, match_reference_4(1,:)); ones(1, length(match_reference_4))];
+p2 = [points_4(1:2, match_reference_4(2,:)); ones(1, length(match_reference_4))];
+[F_4, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
+
+%%
+% Get dynamic and static points
+% The idea would be that static keypoints are shared across all frames
+n_frames=2;
+keypoints_ref_shared = ones(1+n_frames, length(points_1));
+keypoints_ref_shared(1,:) = ismember(1:length(points_1), match_reference_base(1,:));
+keypoints_ref_shared(2,:) = ismember(1:length(points_1), match_reference_3(1,:));
+keypoints_ref_shared(3,:) = ismember(1:length(points_1), match_reference_4(1,:));
+
+shared_indices = find(sum(keypoints_ref_shared) == 1 + n_frames);
+
+%%
+figure;imshow(reference);
+hold on;
+for i=1:length(shared_indices)
+    idx_base = shared_indices(i);
+    point1_1 = points_1(:, idx_base);
+    plot(point1_1(1), point1_1(2), 'y*');
+    text(point1_1(1), point1_1(2), sprintf('%.0f',idx_base))
+
+end
+%%
+idx_reference = 668; 
+idx_base = match_reference_base(2, match_reference_base(1,:) == idx_reference);
+idx_I3 = match_reference_3(2, match_reference_3(1,:) == idx_reference);
+idx_I4 = match_reference_4(2, match_reference_4(1,:) == idx_reference);
+
+% Compute Trajectory
+point1_1 = [points_1(1:2, idx_reference)' 1]';
+point1_2 = [points_2(1:2, idx_base)' 1]';
+
+l1 = cross(point1_1, point1_2); 
+figure;imshow(reference);
+hold on;
+t=1:0.1:1000;
+plot(t, -(l1(1)*t + l1(3)) / l1(2), 'y');
+plot(points_1(1,idx_reference), points_1(2,idx_reference), 'y*');
+
+% base image -->  last image        
+point2 = [points_2(1:2, idx_base)' 1]';
+l2 = F_base'*point2;
+plot(t, -(l2(1)*t + l2(3)) / l2(2), 'c');
+pi2 = cross(l1, l2);
+plot(pi2(1)/pi2(3), pi2(2)/pi2(3), 'c*');
+
+% this should be after yellow point
+point3 = [points_3(1:2, idx_I3)' 1]';
+l3 = F_3'*point3;
+plot(t, -(l3(1)*t + l3(3)) / l3(2), 'b');
+pi3 = cross(l1,l3);
+plot(pi3(1)/pi3(3), pi3(2)/pi3(3), 'b*');
+
+% this should be after blue point
+point4 = [points_4(1:2,idx_I4)' 1]';
+l4 = F_4'*point4;
+plot(t, -(l4(1)*t + l4(3)) / l4(2), 'g');
+pi4 = cross(l1,l4);
+plot(pi4(1)/pi4(3), pi4(2)/pi4(3), 'g*');
