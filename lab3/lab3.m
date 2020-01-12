@@ -168,17 +168,20 @@ matches_4 = siftmatch(desc_1, desc_4);
 % F matrix of image 2
 p1 = [points_1(1:2, matches_2(1,:)); ones(1, length(matches_2))];
 p2 = [points_2(1:2, matches_2(2,:)); ones(1, length(matches_2))];
-F2 = fundamental_matrix(p1, p2);
+% F2 = fundamental_matrix(p1, p2);
+[F2, inliers_2] = ransac_fundamental_matrix(p1, p2, 2.0);
 
 % F matrix of image 3
 p1 = [points_1(1:2, matches_3(1,:)); ones(1, length(matches_3))];
 p2 = [points_3(1:2, matches_3(2,:)); ones(1, length(matches_3))];
-F3 = fundamental_matrix(p1, p2);
+% F3 = fundamental_matrix(p1, p2);
+[F3, inliers_3] = ransac_fundamental_matrix(p1, p2, 2.0);
 
 % F matrix of image 4
 p1 = [points_1(1:2, matches_4(1,:)); ones(1, length(matches_4))];
 p2 = [points_4(1:2, matches_4(2,:)); ones(1, length(matches_4))];
-F4 = fundamental_matrix(p1, p2);
+% F4 = fundamental_matrix(p1, p2);
+[F4, inliers_4] = ransac_fundamental_matrix(p1, p2, 2.0);
 
 %% Plot the car trajectory (keypoint idx_car_I1 in image 1)
 
