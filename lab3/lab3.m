@@ -161,25 +161,43 @@ subplot(2,2,4); imshow(im4rgb); axis image; title('Image 4');
 % (use the SIFT keypoints previously computed)
 
 % Compute sift matches
-matches_2 = siftmatch(desc_1, desc_2);
-matches_3 = siftmatch(desc_1, desc_3);
-matches_4 = siftmatch(desc_1, desc_4);
+matches_12 = siftmatch(desc_1, desc_2);
+matches_13 = siftmatch(desc_1, desc_3);
+matches_14 = siftmatch(desc_1, desc_4);
+
+% Compute Euclidean distance between matched points
+d_12 = vecnorm(points_1(1:2,matches_12(1,:))-points_2(1:2,matches_12(2,:)),2,1);
+d_13 = vecnorm(points_1(1:2,matches_13(1,:))-points_3(1:2,matches_13(2,:)),2,1);
+d_14 = vecnorm(points_1(1:2,matches_14(1,:))-points_4(1:2,matches_14(2,:)),2,1);
+th = 80;
+idx_static_1 = intersect(matches_12(1,d_12<th), matches_13(1,d_13<th));
+idx_static_1 = intersect(idx_static_1, matches_14(1,d_14<th));
+matches_static_12 = matches_12(:,ismember(matches_12(1,:),idx_static_1));
+matches_static_13 = matches_13(:,ismember(matches_13(1,:),idx_static_1));
+matches_static_14 = matches_14(:,ismember(matches_14(1,:),idx_static_1));
+
+figure;
+plotmatches(im1rgb, im2rgb, points_1(1:2,:), points_2(1:2,:), matches_static_12, 'Stacking', 'v');
+figure;
+plotmatches(im1rgb, im3rgb, points_1(1:2,:), points_3(1:2,:), matches_static_13, 'Stacking', 'v');
+figure;
+plotmatches(im1rgb, im4rgb, points_1(1:2,:), points_4(1:2,:), matches_static_14, 'Stacking', 'v');
 
 % F matrix of image 2
-p1 = [points_1(1:2, matches_2(1,:)); ones(1, length(matches_2))];
-p2 = [points_2(1:2, matches_2(2,:)); ones(1, length(matches_2))];
+p1 = [points_1(1:2, matches_static_12(1,:)); ones(1, length(matches_static_12))];
+p2 = [points_2(1:2, matches_static_12(2,:)); ones(1, length(matches_static_12))];
 % F2 = fundamental_matrix(p1, p2);
 [F2, inliers_2] = ransac_fundamental_matrix(p1, p2, 2.0);
 
 % F matrix of image 3
-p1 = [points_1(1:2, matches_3(1,:)); ones(1, length(matches_3))];
-p2 = [points_3(1:2, matches_3(2,:)); ones(1, length(matches_3))];
+p1 = [points_1(1:2, matches_static_13(1,:)); ones(1, length(matches_static_13))];
+p2 = [points_3(1:2, matches_static_13(2,:)); ones(1, length(matches_static_13))];
 % F3 = fundamental_matrix(p1, p2);
 [F3, inliers_3] = ransac_fundamental_matrix(p1, p2, 2.0);
 
 % F matrix of image 4
-p1 = [points_1(1:2, matches_4(1,:)); ones(1, length(matches_4))];
-p2 = [points_4(1:2, matches_4(2,:)); ones(1, length(matches_4))];
+p1 = [points_1(1:2, matches_static_14(1,:)); ones(1, length(matches_static_14))];
+p2 = [points_4(1:2, matches_static_14(2,:)); ones(1, length(matches_static_14))];
 % F4 = fundamental_matrix(p1, p2);
 [F4, inliers_4] = ransac_fundamental_matrix(p1, p2, 2.0);
 
@@ -188,9 +206,9 @@ p2 = [points_4(1:2, matches_4(2,:)); ones(1, length(matches_4))];
 % ToDo: complete the code
 
 idx_car_I1 = 1197;
-idx_car_I2 = matches_2(2, (find(matches_2(1,:) == idx_car_I1)));
-idx_car_I3 = matches_3(2, (find(matches_3(1,:) == idx_car_I1)));
-idx_car_I4 = matches_4(2, (find(matches_4(1,:) == idx_car_I1)));
+idx_car_I2 = matches_12(2, (find(matches_12(1,:) == idx_car_I1)));
+idx_car_I3 = matches_13(2, (find(matches_13(1,:) == idx_car_I1)));
+idx_car_I4 = matches_14(2, (find(matches_14(1,:) == idx_car_I1)));
 
 % coordinates (in image 1) of the keypoint idx_car_I1 (point in a van). 
 % point1_1 is the projection of a 3D point in the 3D trajectory of the van
