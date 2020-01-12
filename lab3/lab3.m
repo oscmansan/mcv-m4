@@ -279,15 +279,15 @@ addpath('../lab2/sift');
 
 % Read Image
 im1rgb=imread('Data/SkateBoard/IMG0_002.png');
-im2rgb=imread('Data/SkateBoard/IMG0_009.png');
+im2rgb=imread('Data/SkateBoard/IMG0_006.png');
 im3rgb=imread('Data/SkateBoard/IMG0_003.png');
 im4rgb=imread('Data/SkateBoard/IMG0_004.png');
 
 % gray
-reference = double(rgb2gray(im1rgb)) / 255;
-base = double(rgb2gray(im2rgb)) / 255;
-frame01 = double(rgb2gray(im3rgb)) / 255;
-frame02 = double(rgb2gray(im4rgb)) / 255;
+reference = sum(double(im1rgb), 3) / 3 / 255;
+base = sum(double(im2rgb), 3) / 3 / 255;
+frame01 = sum(double(im3rgb), 3) / 3 / 255;
+frame02 = sum(double(im4rgb), 3) / 3 / 255;
 
 figure;
 subplot(2,2,1); imshow(reference); axis image; title('Reference image');
@@ -301,38 +301,46 @@ subplot(2,2,4); imshow(frame02); axis image; title('4rd image');
 [points_3, desc_3] = sift(frame01, 'Threshold', 0.015);
 [points_4, desc_4] = sift(frame02, 'Threshold', 0.015);
 
-%% Algorithm 1
-
 % Match images
-match_reference_base = siftmatch(desc_1, desc_2);
-match_reference_3 = siftmatch(desc_1, desc_3);
-match_reference_4 = siftmatch(desc_1, desc_4);
+match_ref_base = siftmatch(desc_1, desc_2);
+match_ref_3 = siftmatch(desc_1, desc_3);
+match_ref_4 = siftmatch(desc_1, desc_4);
 
-% Compute Fundamental Matrices
-p1 = [points_1(1:2, match_reference_base(1,:)); ones(1, length(match_reference_base))];
-p2 = [points_2(1:2, match_reference_base(2,:)); ones(1, length(match_reference_base))];
+% Compute Euclidean distance between matched points
+d_12 = vecnorm(points_1(1:2,match_ref_base(1,:))-points_2(1:2,match_ref_base(2,:)),2,1);
+d_13 = vecnorm(points_1(1:2,match_ref_3(1,:))-points_3(1:2,match_ref_3(2,:)),2,1);
+d_14 = vecnorm(points_1(1:2,match_ref_4(1,:))-points_4(1:2,match_ref_4(2,:)),2,1);
+
+% Select static points
+th = 50;  % chosen empirically (in pixels)
+idx_static_1 = intersect(match_ref_base(1,d_12<th), match_ref_3(1,d_13<th));
+idx_static_1 = intersect(idx_static_1, match_ref_4(1,d_14<th));
+matches_static_ref_base = match_ref_base(:,ismember(match_ref_base(1,:),idx_static_1));
+matches_static_ref_3 = match_ref_3(:,ismember(match_ref_3(1,:),idx_static_1));
+matches_static_ref_4 = match_ref_4(:,ismember(match_ref_4(1,:),idx_static_1));
+
+%% Compute Fundamental Matrices
+p1 = [points_1(1:2, matches_static_ref_base(1,:)); ones(1, length(matches_static_ref_base))];
+p2 = [points_2(1:2, matches_static_ref_base(2,:)); ones(1, length(matches_static_ref_base))];
 [F_base, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
 
-p1 = [points_1(1:2, match_reference_3(1,:)); ones(1, length(match_reference_3))];
-p2 = [points_3(1:2, match_reference_3(2,:)); ones(1, length(match_reference_3))];
+p1 = [points_1(1:2, matches_static_ref_3(1,:)); ones(1, length(matches_static_ref_3))];
+p2 = [points_3(1:2, matches_static_ref_3(2,:)); ones(1, length(matches_static_ref_3))];
 [F_3, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
 
-p1 = [points_1(1:2, match_reference_4(1,:)); ones(1, length(match_reference_4))];
-p2 = [points_4(1:2, match_reference_4(2,:)); ones(1, length(match_reference_4))];
+p1 = [points_1(1:2, matches_static_ref_4(1,:)); ones(1, length(matches_static_ref_4))];
+p2 = [points_4(1:2, matches_static_ref_4(2,:)); ones(1, length(matches_static_ref_4))];
 [F_4, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
 
-%%
-% Get dynamic and static points
-% The idea would be that static keypoints are shared across all frames
+%% Compute and Show shared keypoints. Used to select the idx_reference
 n_frames=2;
 keypoints_ref_shared = ones(1+n_frames, length(points_1));
-keypoints_ref_shared(1,:) = ismember(1:length(points_1), match_reference_base(1,:));
-keypoints_ref_shared(2,:) = ismember(1:length(points_1), match_reference_3(1,:));
-keypoints_ref_shared(3,:) = ismember(1:length(points_1), match_reference_4(1,:));
+keypoints_ref_shared(1,:) = ismember(1:length(points_1), match_ref_base(1,:));
+keypoints_ref_shared(2,:) = ismember(1:length(points_1), match_ref_3(1,:));
+keypoints_ref_shared(3,:) = ismember(1:length(points_1), match_ref_4(1,:));
 
 shared_indices = find(sum(keypoints_ref_shared) == 1 + n_frames);
 
-%%
 figure;imshow(reference);
 hold on;
 for i=1:length(shared_indices)
@@ -340,13 +348,13 @@ for i=1:length(shared_indices)
     point1_1 = points_1(:, idx_base);
     plot(point1_1(1), point1_1(2), 'y*');
     text(point1_1(1), point1_1(2), sprintf('%.0f',idx_base))
-
 end
-%%
-idx_reference = 668; 
-idx_base = match_reference_base(2, match_reference_base(1,:) == idx_reference);
-idx_I3 = match_reference_3(2, match_reference_3(1,:) == idx_reference);
-idx_I4 = match_reference_4(2, match_reference_4(1,:) == idx_reference);
+%% Compute and Plot Trajectory
+
+idx_reference = 935; % id obtained from shared_indices
+idx_base = match_ref_base(2, match_ref_base(1,:) == idx_reference);
+idx_I3 = match_ref_3(2, match_ref_3(1,:) == idx_reference);
+idx_I4 = match_ref_4(2, match_ref_4(1,:) == idx_reference);
 
 % Compute Trajectory
 point1_1 = [points_1(1:2, idx_reference)' 1]';
