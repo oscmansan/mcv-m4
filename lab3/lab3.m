@@ -165,41 +165,21 @@ matches_12 = siftmatch(desc_1, desc_2);
 matches_13 = siftmatch(desc_1, desc_3);
 matches_14 = siftmatch(desc_1, desc_4);
 
-% Compute Euclidean distance between matched points
-d_12 = vecnorm(points_1(1:2,matches_12(1,:))-points_2(1:2,matches_12(2,:)),2,1);
-d_13 = vecnorm(points_1(1:2,matches_13(1,:))-points_3(1:2,matches_13(2,:)),2,1);
-d_14 = vecnorm(points_1(1:2,matches_14(1,:))-points_4(1:2,matches_14(2,:)),2,1);
-
-% Select static points
-th = 50;  % chosen empirically (in pixels)
-idx_static_1 = intersect(matches_12(1,d_12<th), matches_13(1,d_13<th));
-idx_static_1 = intersect(idx_static_1, matches_14(1,d_14<th));
-matches_static_12 = matches_12(:,ismember(matches_12(1,:),idx_static_1));
-matches_static_13 = matches_13(:,ismember(matches_13(1,:),idx_static_1));
-matches_static_14 = matches_14(:,ismember(matches_14(1,:),idx_static_1));
-
-% figure;
-% plotmatches(im1rgb, im2rgb, points_1(1:2,:), points_2(1:2,:), matches_static_12, 'Stacking', 'v');
-% figure;
-% plotmatches(im1rgb, im3rgb, points_1(1:2,:), points_3(1:2,:), matches_static_13, 'Stacking', 'v');
-% figure;
-% plotmatches(im1rgb, im4rgb, points_1(1:2,:), points_4(1:2,:), matches_static_14, 'Stacking', 'v');
-
 % F matrix of image 2
-p1 = [points_1(1:2, matches_static_12(1,:)); ones(1, length(matches_static_12))];
-p2 = [points_2(1:2, matches_static_12(2,:)); ones(1, length(matches_static_12))];
+p1 = [points_1(1:2, matches_12(1,:)); ones(1, length(matches_12))];
+p2 = [points_2(1:2, matches_12(2,:)); ones(1, length(matches_12))];
 % F2 = fundamental_matrix(p1, p2);
 [F2, inliers_2] = ransac_fundamental_matrix(p1, p2, 2.0);
 
 % F matrix of image 3
-p1 = [points_1(1:2, matches_static_13(1,:)); ones(1, length(matches_static_13))];
-p2 = [points_3(1:2, matches_static_13(2,:)); ones(1, length(matches_static_13))];
+p1 = [points_1(1:2, matches_13(1,:)); ones(1, length(matches_13))];
+p2 = [points_3(1:2, matches_13(2,:)); ones(1, length(matches_13))];
 % F3 = fundamental_matrix(p1, p2);
 [F3, inliers_3] = ransac_fundamental_matrix(p1, p2, 2.0);
 
 % F matrix of image 4
-p1 = [points_1(1:2, matches_static_14(1,:)); ones(1, length(matches_static_14))];
-p2 = [points_4(1:2, matches_static_14(2,:)); ones(1, length(matches_static_14))];
+p1 = [points_1(1:2, matches_14(1,:)); ones(1, length(matches_14))];
+p2 = [points_4(1:2, matches_14(2,:)); ones(1, length(matches_14))];
 % F4 = fundamental_matrix(p1, p2);
 [F4, inliers_4] = ransac_fundamental_matrix(p1, p2, 2.0);
 
@@ -275,115 +255,117 @@ plot(pi4(1)/pi4(3), pi4(2)/pi4(3), 'g*');
 %     Photo-sequencing paper with a selection of the detected dynamic
 %     features. You may reuse the code generated for the previous question.
 %
-addpath('../lab2/sift');
 
-% Read Image
-im1rgb=imread('Data/SkateBoard/IMG0_002.png');
-im2rgb=imread('Data/SkateBoard/IMG0_006.png');
+% Read images
+im1rgb=imread('Data/SkateBoard/IMG0_006.png');
+im2rgb=imread('Data/SkateBoard/IMG0_004.png');
 im3rgb=imread('Data/SkateBoard/IMG0_003.png');
-im4rgb=imread('Data/SkateBoard/IMG0_004.png');
+im4rgb=imread('Data/SkateBoard/IMG0_002.png');
 
-% gray
-reference = sum(double(im1rgb), 3) / 3 / 255;
-base = sum(double(im2rgb), 3) / 3 / 255;
-frame01 = sum(double(im3rgb), 3) / 3 / 255;
-frame02 = sum(double(im4rgb), 3) / 3 / 255;
+% Convert to grayscale
+im1 = sum(double(im1rgb), 3) / 3 / 255;
+im2 = sum(double(im2rgb), 3) / 3 / 255;
+im3 = sum(double(im3rgb), 3) / 3 / 255;
+im4 = sum(double(im4rgb), 3) / 3 / 255;
 
 figure;
-subplot(2,2,1); imshow(reference); axis image; title('Reference image');
-subplot(2,2,2); imshow(base); axis image; title('Base image');
-subplot(2,2,3); imshow(frame01); axis image; title('3rd image');
-subplot(2,2,4); imshow(frame02); axis image; title('4rd image');
+subplot(2,2,1); imshow(im1); axis image; title('1st image');
+subplot(2,2,2); imshow(im2); axis image; title('2nd image');
+subplot(2,2,3); imshow(im3); axis image; title('3rd image');
+subplot(2,2,4); imshow(im4); axis image; title('4rd image');
 
-% sift
-[points_1, desc_1] = sift(reference, 'Threshold', 0.015);
-[points_2, desc_2] = sift(base, 'Threshold', 0.015);
-[points_3, desc_3] = sift(frame01, 'Threshold', 0.015);
-[points_4, desc_4] = sift(frame02, 'Threshold', 0.015);
+% Compute SIFT descriptors
+[points_1, desc_1] = sift(im1, 'Threshold', 0.015);
+[points_2, desc_2] = sift(im2, 'Threshold', 0.015);
+[points_3, desc_3] = sift(im3, 'Threshold', 0.015);
+[points_4, desc_4] = sift(im4, 'Threshold', 0.015);
 
 % Match images
-match_ref_base = siftmatch(desc_1, desc_2);
-match_ref_3 = siftmatch(desc_1, desc_3);
-match_ref_4 = siftmatch(desc_1, desc_4);
+matches_12 = siftmatch(desc_1, desc_2);
+matches_13 = siftmatch(desc_1, desc_3);
+matches_14 = siftmatch(desc_1, desc_4);
 
-% Compute Euclidean distance between matched points
-d_12 = vecnorm(points_1(1:2,match_ref_base(1,:))-points_2(1:2,match_ref_base(2,:)),2,1);
-d_13 = vecnorm(points_1(1:2,match_ref_3(1,:))-points_3(1:2,match_ref_3(2,:)),2,1);
-d_14 = vecnorm(points_1(1:2,match_ref_4(1,:))-points_4(1:2,match_ref_4(2,:)),2,1);
+%% Compute Euclidean distance between matched points
+d_12 = vecnorm(points_1(1:2,matches_12(1,:))-points_2(1:2,matches_12(2,:)),2,1);
+d_13 = vecnorm(points_1(1:2,matches_13(1,:))-points_3(1:2,matches_13(2,:)),2,1);
+d_14 = vecnorm(points_1(1:2,matches_14(1,:))-points_4(1:2,matches_14(2,:)),2,1);
 
 % Select static points
-th = 50;  % chosen empirically (in pixels)
-idx_static_1 = intersect(match_ref_base(1,d_12<th), match_ref_3(1,d_13<th));
-idx_static_1 = intersect(idx_static_1, match_ref_4(1,d_14<th));
-matches_static_ref_base = match_ref_base(:,ismember(match_ref_base(1,:),idx_static_1));
-matches_static_ref_3 = match_ref_3(:,ismember(match_ref_3(1,:),idx_static_1));
-matches_static_ref_4 = match_ref_4(:,ismember(match_ref_4(1,:),idx_static_1));
+th = 20;  % chosen empirically (in pixels)
+idx_static_1 = matches_12(1,d_12<th);
+matches_static_12 = matches_12(:,ismember(matches_12(1,:),idx_static_1));
+matches_static_13 = matches_13(:,ismember(matches_13(1,:),idx_static_1));
+matches_static_14 = matches_14(:,ismember(matches_14(1,:),idx_static_1));
 
-%% Compute Fundamental Matrices
-p1 = [points_1(1:2, matches_static_ref_base(1,:)); ones(1, length(matches_static_ref_base))];
-p2 = [points_2(1:2, matches_static_ref_base(2,:)); ones(1, length(matches_static_ref_base))];
-[F_base, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
+figure;
+plotmatches(im1, im2, points_1(1:2,:), points_2(1:2,:), matches_static_12, 'Stacking', 'v');
+figure;
+plotmatches(im1, im3, points_1(1:2,:), points_3(1:2,:), matches_static_13, 'Stacking', 'v');
+figure;
+plotmatches(im1, im4, points_1(1:2,:), points_4(1:2,:), matches_static_14, 'Stacking', 'v');
 
-p1 = [points_1(1:2, matches_static_ref_3(1,:)); ones(1, length(matches_static_ref_3))];
-p2 = [points_3(1:2, matches_static_ref_3(2,:)); ones(1, length(matches_static_ref_3))];
-[F_3, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
+%% Compute fundamental matrices
+p1 = [points_1(1:2, matches_static_12(1,:)); ones(1, length(matches_static_12))];
+p2 = [points_2(1:2, matches_static_12(2,:)); ones(1, length(matches_static_12))];
+[F2, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
 
-p1 = [points_1(1:2, matches_static_ref_4(1,:)); ones(1, length(matches_static_ref_4))];
-p2 = [points_4(1:2, matches_static_ref_4(2,:)); ones(1, length(matches_static_ref_4))];
-[F_4, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
+p1 = [points_1(1:2, matches_static_13(1,:)); ones(1, length(matches_static_13))];
+p2 = [points_3(1:2, matches_static_13(2,:)); ones(1, length(matches_static_13))];
+[F3, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
 
-%% Compute and Show shared keypoints. Used to select the idx_reference
-n_frames=2;
-keypoints_ref_shared = ones(1+n_frames, length(points_1));
-keypoints_ref_shared(1,:) = ismember(1:length(points_1), match_ref_base(1,:));
-keypoints_ref_shared(2,:) = ismember(1:length(points_1), match_ref_3(1,:));
-keypoints_ref_shared(3,:) = ismember(1:length(points_1), match_ref_4(1,:));
+p1 = [points_1(1:2, matches_static_14(1,:)); ones(1, length(matches_static_14))];
+p2 = [points_4(1:2, matches_static_14(2,:)); ones(1, length(matches_static_14))];
+[F4, ~] = ransac_fundamental_matrix(p1, p2, 2.0);
 
-shared_indices = find(sum(keypoints_ref_shared) == 1 + n_frames);
+vgg_gui_F(im1rgb, im2rgb, F2');
+vgg_gui_F(im1rgb, im3rgb, F3');
+vgg_gui_F(im1rgb, im4rgb, F4');
 
-figure;imshow(reference);
+%% Compute and show shared keypoints. Used to select the idx_I1
+idx_shared = intersect(matches_12(1,:), matches_13(1,:));
+idx_shared = intersect(idx_shared, matches_14(1,:));
+
+figure;
+imshow(im1rgb);
 hold on;
-for i=1:length(shared_indices)
-    idx_base = shared_indices(i);
-    point1_1 = points_1(:, idx_base);
-    plot(point1_1(1), point1_1(2), 'y*');
-    text(point1_1(1), point1_1(2), sprintf('%.0f',idx_base))
-end
-%% Compute and Plot Trajectory
+plot(points_1(1,idx_shared), points_1(2,idx_shared), '+y');
+text(points_1(1,idx_shared), points_1(2,idx_shared), compose('%d', idx_shared), 'Color', 'w');
 
-idx_reference = 935; % id obtained from shared_indices
-idx_base = match_ref_base(2, match_ref_base(1,:) == idx_reference);
-idx_I3 = match_ref_3(2, match_ref_3(1,:) == idx_reference);
-idx_I4 = match_ref_4(2, match_ref_4(1,:) == idx_reference);
+%% Compute and plot trajectory
 
-% Compute Trajectory
-point1_1 = [points_1(1:2, idx_reference)' 1]';
-point1_2 = [points_2(1:2, idx_base)' 1]';
+idx_I1 = 2022; % id obtained from idx_shared
+idx_I2 = matches_12(2, (find(matches_12(1,:) == idx_I1)));
+idx_I3 = matches_13(2, (find(matches_13(1,:) == idx_I1)));
+idx_I4 = matches_14(2, (find(matches_14(1,:) == idx_I1)));
+
+% Compute trajectory
+point1_1 = [points_1(1:2, idx_I1)' 1]';
+point1_2 = [points_2(1:2, idx_I2)' 1]';
 
 l1 = cross(point1_1, point1_2); 
-figure;imshow(reference);
+figure;imshow(im1rgb);
 hold on;
 t=1:0.1:1000;
 plot(t, -(l1(1)*t + l1(3)) / l1(2), 'y');
-plot(points_1(1,idx_reference), points_1(2,idx_reference), 'y*');
+plot(points_1(1,idx_I1), points_1(2,idx_I1), 'y*');
 
-% base image -->  last image        
-point2 = [points_2(1:2, idx_base)' 1]';
-l2 = F_base'*point2;
+% Compute the projection of point idx_I2 in the reference image
+point2 = [points_2(1:2, idx_I2)' 1]';
+l2 = F2'*point2;
 plot(t, -(l2(1)*t + l2(3)) / l2(2), 'c');
 pi2 = cross(l1, l2);
 plot(pi2(1)/pi2(3), pi2(2)/pi2(3), 'c*');
 
-% this should be after yellow point
+% Compute the projection of point idx_I3 in the reference image
 point3 = [points_3(1:2, idx_I3)' 1]';
-l3 = F_3'*point3;
+l3 = F3'*point3;
 plot(t, -(l3(1)*t + l3(3)) / l3(2), 'b');
 pi3 = cross(l1,l3);
 plot(pi3(1)/pi3(3), pi3(2)/pi3(3), 'b*');
 
-% this should be after blue point
+% Compute the projection of point idx_I4 in the reference image
 point4 = [points_4(1:2,idx_I4)' 1]';
-l4 = F_4'*point4;
+l4 = F4'*point4;
 plot(t, -(l4(1)*t + l4(3)) / l4(2), 'g');
 pi4 = cross(l1,l4);
 plot(pi4(1)/pi4(3), pi4(2)/pi4(3), 'g*');
