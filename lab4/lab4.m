@@ -2,7 +2,7 @@
 %% Lab 4: Reconstruction from two views (knowing internal camera parameters) 
 
 
-addpath('sift'); % ToDo: change 'sift' to the correct path where you have the sift functions
+addpath('../lab2/sift'); % ToDo: change 'sift' to the correct path where you have the sift functions
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 1. Triangulation
@@ -78,9 +78,7 @@ plotmatches(I{1}, I{2}, points{1}, points{2}, inlier_matches, 'Stacking', 'v');
 x1 = points{1}(:, inlier_matches(1, :));
 x2 = points{2}(:, inlier_matches(2, :));
 
-%vgg_gui_F(Irgb{1}, Irgb{2}, F');
-
-
+% vgg_gui_F(Irgb{1}, Irgb{2}, F');
 
 
 %% Compute candidate camera matrices.
@@ -93,19 +91,16 @@ K = H * K;
 
 
 % ToDo: Compute the Essential matrix from the Fundamental matrix
-E = ...
+E_rank3 = K'*F*K;
+[U,D,V] = svd(E_rank3);
+D(end,end) = 0;
+E = U*D*V';
 
 
 % ToDo: write the camera projection matrix for the first camera
-P1 = ...
+P1 = K*eye(3,4);
 
 % ToDo: write the four possible matrices for the second camera
-Pc2 = {};
-Pc2{1} = ...
-Pc2{2} = ...
-Pc2{3} = ...
-Pc2{4} = ...
-
 % HINT: You may get improper rotations; in that case you need to change
 %       their sign.
 % Let R be a rotation matrix, you may check:
@@ -113,13 +108,30 @@ Pc2{4} = ...
 %     R = -R;
 % end
 
+W = [0 -1 0; 1 0 0; 0 0 1];
+R1 = U*W*V';
+R2 = U*W'*V';
+if det(R1) < 0
+    R1 = -R1;
+end
+if det(R2) < 0
+    R2 = -R2;
+end
+t = U(:,end);
+
+Pc2 = {};
+Pc2{1} = K*[R1 t];
+Pc2{2} = K*[R1 -t];
+Pc2{3} = K*[R2 t];
+Pc2{4} = K*[R2 -t];
+
 % plot the first camera and the four possible solutions for the second
 figure;
-plot_camera(P1,w,h);
-plot_camera(Pc2{1},w,h);
-plot_camera(Pc2{2},w,h);
-plot_camera(Pc2{3},w,h);
-plot_camera(Pc2{4},w,h);
+plot_camera(P1,w,h,'b');
+plot_camera(Pc2{1},w,h,'r');
+plot_camera(Pc2{2},w,h,'r');
+plot_camera(Pc2{3},w,h,'r');
+plot_camera(Pc2{4},w,h,'r');
 
 
 %% Reconstruct structure
@@ -141,8 +153,8 @@ g = interp2(double(Irgb{1}(:,:,2)), x1(1,:), x1(2,:));
 b = interp2(double(Irgb{1}(:,:,3)), x1(1,:), x1(2,:));
 Xe = euclid(X);
 figure; hold on;
-plot_camera(P1,w,h);
-plot_camera(P2,w,h);
+plot_camera(P1,w,h,'b');
+plot_camera(P2,w,h,'r');
 for i = 1:length(Xe)
     scatter3(Xe(1,i), Xe(3,i), -Xe(2,i), 5^2, [r(i) g(i) b(i)]/255, 'filled');
 end;
