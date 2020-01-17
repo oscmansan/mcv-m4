@@ -136,7 +136,20 @@ plot_camera(Pc2{4},w,h,'r');
 
 %% Reconstruct structure
 % ToDo: Choose a second camera candidate by triangulating a match.
-P2 = ...
+num_valid_points = zeros(4,1);
+for i=1:4
+    for j=1:size(x1,2)
+        X = triangulate(x1(:,j), x2(:,j), P1, Pc2{i}, [w,h]);
+        xP1 = P1*X;
+        xP2 = Pc2{i}*X;
+        if xP1(3)>0 && xP2(3)>0
+            num_valid_points(i) = num_valid_points(i)+1;
+        end
+    end
+end
+idx = find(num_valid_points==max(num_valid_points));
+idx = idx(randi(size(idx,1),1));
+P2 = Pc2{idx};
 
 % Triangulate all matches.
 N = size(x1,2);
