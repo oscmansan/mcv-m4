@@ -207,6 +207,18 @@ axis equal;
 % Note 2: For this first set of images use 0 as minimum disparity 
 % and 16 as the the maximum one.
 
+% Read images
+Ileft = double(rgb2gray(imread('Data/scene1.row3.col3.ppm')));
+Iright = double(rgb2gray(imread('Data/scene1.row3.col4.ppm')));
+gt = double(imread('Data/truedisp.row3.col3.pgm'));
+
+disparity = stereo_computation(Ileft, Iright, 0, 16, 9, 'SSD');
+disparity = disparity*8;  % ground truth disparity map is scaled by a factor of 8
+imshow(uint8(disparity),[min(gt(:)),max(gt(:))]);
+
+err = (norm(disparity(:)-gt(:),2).^2)/numel(disparity);
+fprintf('MSE: %f\n', err);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 4. Depth map computation with local methods (NCC)
