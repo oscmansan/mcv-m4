@@ -170,15 +170,21 @@ plot_camera(P1,w,h,'b');
 plot_camera(P2,w,h,'r');
 for i = 1:length(Xe)
     scatter3(Xe(1,i), Xe(3,i), -Xe(2,i), 5^2, [r(i) g(i) b(i)]/255, 'filled');
-end;
+end
 axis equal;
-
 
 %% Compute reprojection error.
 
 % ToDo: compute the reprojection errors
 %       plot the histogram of reprojection errors, and
 %       plot the mean reprojection error
+
+[err, mean_err] = reprojection_error(P1,P2,X,x1,x2);
+
+figure;
+histogram(err)
+
+fprintf('\nMean reprojection error --> %.2f\n', mean_err);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 3. Depth map computation with local methods (SSD)
