@@ -298,8 +298,7 @@ w = [o(1), o(2), o(3);
  
 %% Recover the camera calibration.
 
-KKt = inv(w);
-K = chol(KKt);  % shouldn't we use the lower triangular?
+K = inv(chol(w));
     
 % ToDo: in the report make some comments related to the obtained internal
 %       camera parameters and also comment their relation to the image size

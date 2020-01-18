@@ -24,7 +24,7 @@ while it < max_it
     % update estimate of max_it (the number of trials) to ensure we pick, 
     % with probability p, an initial data set with no outliers
     fracinliers =  length(inliers)/Npoints;
-    pNoOutliers = 1 -  fracinliers^4;
+    pNoOutliers = 1 -  fracinliers^8;
     pNoOutliers = max(eps, pNoOutliers);  % avoid division by -Inf
     pNoOutliers = min(1-eps, pNoOutliers);% avoid division by 0
     max_it = log(1-p)/log(pNoOutliers);
