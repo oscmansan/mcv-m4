@@ -7,7 +7,9 @@ p = floor(winSize/2);
 
 switch cost
     case 'SSD'
-        cost = @(x,y) norm(x(:)-y(:),2).^2;
+        cost = @ssd;
+    case 'NCC'
+        cost = @(x,y,w) 1-ncc(x,y,w);
     otherwise
         warning('Unexpected cost type.');
 end
@@ -17,10 +19,11 @@ tic
 for i = 1+p:numRows-p
     for j = 1+p:numCols-p
         cropLeft = Ileft(i-p:i+p,j-p:j+p);
+        w = ones(winSize)/winSize^2;
         minCost = Inf;
         for k = [max(1+p,j-maxDisp):max(1+p,j-minDisp) min(numCols-p,j+minDisp):min(numCols-p,j+maxDisp)]
             cropRight = Iright(i-p:i+p,k-p:k+p);
-            c = cost(cropLeft,cropRight);
+            c = cost(cropLeft,cropRight,w);
             if c < minCost
                 minCost = c;
                 idx = k;
@@ -34,3 +37,14 @@ toc
 
 end
 
+function c = ssd(x,y,w)
+    c = sum(w(:).*((x(:)-y(:)).^2));
+end
+
+function c = ncc(x,y,w)
+    sumx = sum(w(:).*x(:));
+    sumy = sum(w(:).*y(:));
+    sigmax = sqrt(sum(w(:).*(x(:)-sumx(:).^2)));
+    sigmay = sqrt(sum(w(:).*(y(:)-sumy(:).^2)));
+    c = sum(w(:).*(x(:)-sumx(:)).*(y(:)-sumy(:))) / (sigmax*sigmay);
+end

@@ -218,8 +218,8 @@ Ileft = double(rgb2gray(imread('Data/scene1.row3.col3.ppm')));
 Iright = double(rgb2gray(imread('Data/scene1.row3.col4.ppm')));
 gt = double(imread('Data/truedisp.row3.col3.pgm'));
 
-disparity = stereo_computation(Ileft, Iright, 0, 16, 9, 'SSD');
-disparity = disparity*8;  % ground truth disparity map is scaled by a factor of 8
+disparity = stereo_computation(Ileft, Iright, 0, 16, 31, 'SSD');
+disparity = disparity*16;  % ground truth disparity map is scaled by a factor of 16
 imshow(uint8(disparity),[min(gt(:)),max(gt(:))]);
 
 err = (norm(disparity(:)-gt(:),2).^2)/numel(disparity);
@@ -234,6 +234,14 @@ fprintf('MSE: %f\n', err);
 %
 % Evaluate the results changing the window size (e.g. 3x3, 9x9, 21x21,
 % 31x31). Comment the results.
+
+disparity = stereo_computation(Ileft, Iright, 0, 16, 31, 'NCC');
+disparity = disparity*16;  % ground truth disparity map is scaled by a factor of 16
+imshow(uint8(disparity),[min(gt(:)),max(gt(:))]);
+
+err = (norm(disparity(:)-gt(:),2).^2)/numel(disparity);
+fprintf('MSE: %f\n', err);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 5. Depth map computation with local methods
