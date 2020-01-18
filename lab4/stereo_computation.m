@@ -6,6 +6,8 @@ function disparity = stereo_computation(Ileft,Iright,minDisp,maxDisp,winSize,cos
 p = floor(winSize/2);
 
 switch cost
+    case 'SAD'
+        cost = @sad;
     case 'SSD'
         cost = @ssd;
     case 'NCC'
@@ -37,14 +39,18 @@ toc
 
 end
 
+function c = sad(x,y,w)
+    c = sum(w(:).*abs(x(:)-y(:)));
+end
+
 function c = ssd(x,y,w)
-    c = sum(w(:).*((x(:)-y(:)).^2));
+    c = sum(w(:).*(x(:)-y(:)).^2);
 end
 
 function c = ncc(x,y,w)
     sumx = sum(w(:).*x(:));
     sumy = sum(w(:).*y(:));
-    sigmax = sqrt(sum(w(:).*(x(:)-sumx(:).^2)));
-    sigmay = sqrt(sum(w(:).*(y(:)-sumy(:).^2)));
+    sigmax = sqrt(sum(w(:).*(x(:)-sumx(:)).^2));
+    sigmay = sqrt(sum(w(:).*(y(:)-sumy(:)).^2));
     c = sum(w(:).*(x(:)-sumx(:)).*(y(:)-sumy(:))) / (sigmax*sigmay);
 end

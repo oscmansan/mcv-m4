@@ -213,7 +213,6 @@ fprintf('\nMean reprojection error --> %.2f\n', mean_err);
 % Note 2: For this first set of images use 0 as minimum disparity 
 % and 16 as the the maximum one.
 
-% Read images
 Ileft = double(rgb2gray(imread('Data/scene1.row3.col3.ppm')));
 Iright = double(rgb2gray(imread('Data/scene1.row3.col4.ppm')));
 gt = double(imread('Data/truedisp.row3.col3.pgm'));
@@ -253,6 +252,16 @@ fprintf('MSE: %f\n', err);
 % results.
 % Notice that in this new data the minimum and maximum disparities may
 % change.
+
+Ileft = double(rgb2gray(imread('Data/0001_rectified_s.png')));
+Iright = double(rgb2gray(imread('Data/0002_rectified_s.png')));
+
+disparity = stereo_computation(Ileft, Iright, 0, 32, 15, 'SAD');
+
+imshow(uint8(disparity),[]);
+colormap jet
+colorbar
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 6. Bilateral weights
