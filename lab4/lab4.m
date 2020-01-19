@@ -330,3 +330,65 @@ colorbar
 % Remember to take into account occlusions as explained in the lab session.
 % Once done you can apply the code to the another pair of rectified images 
 % provided in the material and use the estimated disparities with previous methods.
+
+%% Read Data
+close all; clear;
+
+addpath('../lab2/sift');
+
+Ileft_rgb = imresize(imread('Data/new_view/im0.png'), 0.2);
+Iright_rgb = imresize(imread('Data/new_view/im1.png'),0.2);
+Ileft = double(rgb2gray(Ileft_rgb));
+Iright = double(rgb2gray(Iright_rgb));
+
+gtleft = imresize(read_pfm('Data/new_view/disp0.pfm'), 0.2);
+gtright = imresize(read_pfm('Data/new_view/disp1.pfm'), 0.2);
+
+figure;
+subplot(2,2,1); imshow(Ileft_rgb); axis image; title('Left');
+subplot(2,2,2); imshow(Iright_rgb); axis image; title('Right');
+subplot(2,2,3); imshow(uint8(gtleft)); axis image; title('GT left');
+subplot(2,2,4); imshow(uint8(gtright)); axis image; title('GT right');
+
+%% Find corresponding points in images
+
+[points_1, desc_1] = sift(Iright, 'Threshold', 0.015);
+[points_2, desc_2] = sift(Ileft, 'Threshold', 0.015);
+matches = siftmatch(desc_1, desc_2);
+
+p1 = [points_1(1:2, matches(1,:)); ones(1, length(matches))];
+p2 = [points_2(1:2, matches(2,:)); ones(1, length(matches))];
+
+[F, inliers] = ransac_fundamental_matrix(p1, p2, 2.0);
+
+%% Plot
+figure; plotmatches(Iright, Ileft, points_1(1:2,:), points_2(1:2,:), matches, 'Stacking', 'v'); 
+title('All Matches');
+figure; plotmatches(Iright, Ileft, points_1(1:2,:), points_2(1:2,:), matches(:,inliers), 'Stacking', 'v'); 
+title('Inliers');
+
+
+%% Projection Matrices
+% We only move in the x axis, not in the y
+% We assume f0=f1=1
+Cx=-1;
+PR0 = [eye(3) zeros(3,1)];
+PR1 = [eye(3); Cx 0 0]';
+
+% New Image Projective Matrix
+s = 0.5;
+PRs = (1-s)*PR0 + s*PR1;
+ps = (1-s)*p1 + s*p2;
+ps_euclidian = euclid(ps);
+
+% figure;
+% subplot(1,2,1); imshow(Iright,[]); hold on; 
+% scatter(p1(1,:), p1(2,:),'g.');
+% scatter(ps_euclidian(1,:), ps_euclidian(2,:),'r.'); 
+% hold off; title('Translation from camera0'); legend('from camera0', 'new view')
+% 
+% subplot(1,2,2); imshow(Ileft,[]); hold on;
+% scatter(p2(1,:), p2(2,:),'g.');
+% scatter(ps_euclidian(1,:), ps_euclidian(2,:),'r.'); hold off;
+% title('Translation from camera1'); legend('from camera1', 'new view')
+
