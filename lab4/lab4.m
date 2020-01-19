@@ -217,7 +217,7 @@ Ileft = double(rgb2gray(imread('Data/scene1.row3.col3.ppm')));
 Iright = double(rgb2gray(imread('Data/scene1.row3.col4.ppm')));
 gt = double(imread('Data/truedisp.row3.col3.pgm'));
 
-disparity = stereo_computation(Ileft, Iright, 0, 16, 31, 'SSD');
+disparity = stereo_computation(Ileft, Iright, 0, 16, 31, 'Cost', 'SSD');
 disparity = disparity*16;  % ground truth disparity map is scaled by a factor of 16
 imshow(uint8(disparity),[min(gt(:)),max(gt(:))]);
 
@@ -234,7 +234,7 @@ fprintf('MSE: %f\n', err);
 % Evaluate the results changing the window size (e.g. 3x3, 9x9, 21x21,
 % 31x31). Comment the results.
 
-disparity = stereo_computation(Ileft, Iright, 0, 16, 31, 'NCC');
+disparity = stereo_computation(Ileft, Iright, 0, 16, 31, 'Cost', 'NCC');
 disparity = disparity*16;  % ground truth disparity map is scaled by a factor of 16
 imshow(uint8(disparity),[min(gt(:)),max(gt(:))]);
 
@@ -256,7 +256,7 @@ fprintf('MSE: %f\n', err);
 Ileft = double(rgb2gray(imread('Data/0001_rectified_s.png')));
 Iright = double(rgb2gray(imread('Data/0002_rectified_s.png')));
 
-disparity = stereo_computation(Ileft, Iright, 0, 32, 15, 'SAD');
+disparity = stereo_computation(Ileft, Iright, 0, 32, 15, 'Cost', 'SAD');
 
 imshow(uint8(disparity),[]);
 colormap jet
@@ -273,6 +273,16 @@ colorbar
 % Comment the results and compare them to the previous results (no weights).
 %
 % Note: Use grayscale images (the paper uses color images)
+
+Ileft = double(rgb2gray(imread('Data/scene1.row3.col3.ppm')));
+Iright = double(rgb2gray(imread('Data/scene1.row3.col4.ppm')));
+
+disparity = stereo_computation(Ileft, Iright, 0, 16, 35, 'BW', true);
+
+imshow(uint8(disparity),[]);
+colormap jet
+colorbar
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% OPTIONAL:  Stereo computation with Belief Propagation
