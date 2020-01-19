@@ -35,6 +35,10 @@ r = floor(winSize/2);
 
 gamma_col = 12;
 gamma_pos = r;
+alpha = 0.5;
+
+gradLeft = gradient(Ileft);
+gradRight = gradient(Iright);
 
 disparity = zeros(size(Ileft));
 tic
@@ -56,7 +60,10 @@ for i = 1+r:numRows-r
             end
             w = w./sum(w(:));  % normalize weights
 
-            c = cost(patchLeft,patchRight,w);
+            ec = cost(patchLeft,patchRight,w);
+            eg = sad(gradLeft(i-r:i+r,j-r:j+r),gradRight(i-r:i+r,k-r:k+r),w);
+            c = (1-alpha)*ec+alpha*eg;
+
             if c < minCost
                 minCost = c;
                 idx = k;

@@ -219,7 +219,10 @@ gt = double(imread('Data/truedisp.row3.col3.pgm'));
 
 disparity = stereo_computation(Ileft, Iright, 0, 16, 31, 'Cost', 'SSD');
 disparity = disparity*16;  % ground truth disparity map is scaled by a factor of 16
+
+figure;
 imshow(uint8(disparity),[min(gt(:)),max(gt(:))]);
+colormap jet;
 
 err = (norm(disparity(:)-gt(:),2).^2)/numel(disparity);
 fprintf('MSE: %f\n', err);
@@ -236,7 +239,10 @@ fprintf('MSE: %f\n', err);
 
 disparity = stereo_computation(Ileft, Iright, 0, 16, 31, 'Cost', 'NCC');
 disparity = disparity*16;  % ground truth disparity map is scaled by a factor of 16
+
+figure;
 imshow(uint8(disparity),[min(gt(:)),max(gt(:))]);
+colormap jet;
 
 err = (norm(disparity(:)-gt(:),2).^2)/numel(disparity);
 fprintf('MSE: %f\n', err);
@@ -258,9 +264,9 @@ Iright = double(rgb2gray(imread('Data/0002_rectified_s.png')));
 
 disparity = stereo_computation(Ileft, Iright, 0, 32, 15, 'Cost', 'SAD');
 
+figure;
 imshow(uint8(disparity),[]);
-colormap jet
-colorbar
+colormap jet;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -279,9 +285,9 @@ Iright = double(rgb2gray(imread('Data/scene1.row3.col4.ppm')));
 
 disparity = stereo_computation(Ileft, Iright, 0, 16, 35, 'BW', true);
 
+figure;
 imshow(uint8(disparity),[]);
 colormap jet
-colorbar
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
