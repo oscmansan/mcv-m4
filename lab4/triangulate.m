@@ -33,6 +33,6 @@ function X_trian = triangulate(x1, x2, P1, P2, imsize)
 
     % Take the last column of the transposed of V, that's the singular
     % vector with the lowest singular value.
-    X_trian = V(:,4);
+    X_trian = V(:,4)./V(4,4);
 
      
