@@ -344,63 +344,47 @@ colormap jet
 % Once done you can apply the code to the another pair of rectified images 
 % provided in the material and use the estimated disparities with previous methods.
 
-%% Read Data
-close all; clear;
+Il = double(imread('Data/new_view/im0.png'));
+Ir = double(imread('Data/new_view/im1.png'));
+dl = read_pfm('Data/new_view/disp0.pfm');
+dr = read_pfm('Data/new_view/disp1.pfm');
 
-addpath('../lab2/sift');
+if true
+    scale = 0.25;
+    Il = imresize(Il,scale);
+    Ir = imresize(Ir,scale);
+    dl = imresize(dl,scale)*scale;
+    dr = imresize(dr,scale)*scale;
+end
 
-Ileft_rgb = imresize(imread('Data/new_view/im0.png'), 0.2);
-Iright_rgb = imresize(imread('Data/new_view/im1.png'),0.2);
-Ileft = double(rgb2gray(Ileft_rgb));
-Iright = double(rgb2gray(Iright_rgb));
+im = {};
+for s = [0.2, 0.4, 0.6, 0.8]
+    ims = zeros(size(Il));
+    for i = 1:size(Il,1)
+        for j = 1:size(Il,2)
+            k = j-round(dl(i,j));
+            k = min(max(k,1),size(Il,2));
+            p = round((1-s)*j+s*k);
+            if abs(dl(i,j)-dr(i,k)) < 0.1  % check for occlusions
+                ims(i,p,:) = (1-s)*Il(i,j,:)+s*Ir(i,k,:);
+            else
+                if dl(i,j) >= 0 && dl(i,j) < Inf  % right occlusion
+                    ims(i,p,:) = Il(i,j,:);
+                end
+            end
+        end
+    end
+    im{end+1} = uint8(ims);
+end
 
-gtleft = imresize(read_pfm('Data/new_view/disp0.pfm'), 0.2);
-gtright = imresize(read_pfm('Data/new_view/disp1.pfm'), 0.2);
+im = [uint8(Il), im, uint8(Ir)];
 
-figure;
-subplot(2,2,1); imshow(Ileft_rgb); axis image; title('Left');
-subplot(2,2,2); imshow(Iright_rgb); axis image; title('Right');
-subplot(2,2,3); imshow(uint8(gtleft)); axis image; title('GT left');
-subplot(2,2,4); imshow(uint8(gtright)); axis image; title('GT right');
-
-%% Find corresponding points in images
-
-[points_1, desc_1] = sift(Iright, 'Threshold', 0.015);
-[points_2, desc_2] = sift(Ileft, 'Threshold', 0.015);
-matches = siftmatch(desc_1, desc_2);
-
-p1 = [points_1(1:2, matches(1,:)); ones(1, length(matches))];
-p2 = [points_2(1:2, matches(2,:)); ones(1, length(matches))];
-
-[F, inliers] = ransac_fundamental_matrix(p1, p2, 2.0);
-
-%% Plot
-figure; plotmatches(Iright, Ileft, points_1(1:2,:), points_2(1:2,:), matches, 'Stacking', 'v'); 
-title('All Matches');
-figure; plotmatches(Iright, Ileft, points_1(1:2,:), points_2(1:2,:), matches(:,inliers), 'Stacking', 'v'); 
-title('Inliers');
-
-
-%% Projection Matrices
-% We only move in the x axis, not in the y
-% We assume f0=f1=1
-Cx=-1;
-PR0 = [eye(3) zeros(3,1)];
-PR1 = [eye(3); Cx 0 0]';
-
-% New Image Projective Matrix
-s = 0.5;
-PRs = (1-s)*PR0 + s*PR1;
-ps = (1-s)*p1 + s*p2;
-ps_euclidian = euclid(ps);
-
-% figure;
-% subplot(1,2,1); imshow(Iright,[]); hold on; 
-% scatter(p1(1,:), p1(2,:),'g.');
-% scatter(ps_euclidian(1,:), ps_euclidian(2,:),'r.'); 
-% hold off; title('Translation from camera0'); legend('from camera0', 'new view')
-% 
-% subplot(1,2,2); imshow(Ileft,[]); hold on;
-% scatter(p2(1,:), p2(2,:),'g.');
-% scatter(ps_euclidian(1,:), ps_euclidian(2,:),'r.'); hold off;
-% title('Translation from camera1'); legend('from camera1', 'new view')
+filename = 'view_morphing.gif'; % Specify the output file name
+for idx = 1:length(im)
+    [A,map] = rgb2ind(im{idx},256);
+    if idx == 1
+        imwrite(A,map,filename,'gif','LoopCount',Inf,'DelayTime',0.5);
+    else
+        imwrite(A,map,filename,'gif','WriteMode','append','DelayTime',0.5);
+    end
+end
