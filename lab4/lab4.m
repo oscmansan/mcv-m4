@@ -349,26 +349,29 @@ Ir = double(imread('Data/new_view/im1.png'));
 dl = read_pfm('Data/new_view/disp0.pfm');
 dr = read_pfm('Data/new_view/disp1.pfm');
 
-if true
-    scale = 0.25;
-    Il = imresize(Il,scale);
-    Ir = imresize(Ir,scale);
-    dl = imresize(dl,scale)*scale;
-    dr = imresize(dr,scale)*scale;
-end
+scale = 0.25;
+Il = imresize(Il,scale);
+Ir = imresize(Ir,scale);
+dl = imresize(dl,scale)*scale;
+dr = imresize(dr,scale)*scale;
+
+dl = round(dl);
+dr = round(dr);
+
+e = 1;
 
 im = {};
 for s = [0.2, 0.4, 0.6, 0.8]
     ims = zeros(size(Il));
     for i = 1:size(Il,1)
         for j = 1:size(Il,2)
-            k = j-round(dl(i,j));
-            k = min(max(k,1),size(Il,2));
-            p = round((1-s)*j+s*k);
-            if abs(dl(i,j)-dr(i,k)) < 0.1  % check for occlusions
+            k = j-dl(i,j);
+            k = min(max(k,1),size(Ir,2));
+            p = floor((1-s)*j+s*k);
+            if abs(dl(i,j)-dr(i,k)) < e  % check for occlusions
                 ims(i,p,:) = (1-s)*Il(i,j,:)+s*Ir(i,k,:);
             else
-                if dl(i,j) >= 0 && dl(i,j) < Inf  % right occlusion
+                if dl(i,j) >= 0 && dl(i,j) < Inf  % solve right occlusion
                     ims(i,p,:) = Il(i,j,:);
                 end
             end
@@ -377,14 +380,14 @@ for s = [0.2, 0.4, 0.6, 0.8]
     im{end+1} = uint8(ims);
 end
 
-im = [uint8(Il), im, uint8(Ir)];
+im = [uint8(Il), im, uint8(Ir), flip(im)];
 
 filename = 'view_morphing.gif'; % Specify the output file name
 for idx = 1:length(im)
     [A,map] = rgb2ind(im{idx},256);
     if idx == 1
-        imwrite(A,map,filename,'gif','LoopCount',Inf,'DelayTime',0.5);
+        imwrite(A,map,filename,'gif','LoopCount',Inf,'DelayTime',0.2);
     else
-        imwrite(A,map,filename,'gif','WriteMode','append','DelayTime',0.5);
+        imwrite(A,map,filename,'gif','WriteMode','append','DelayTime',0.2);
     end
 end
