@@ -178,9 +178,6 @@ axis equal;
 
 [err, mean_err] = reprojection_error(P1,P2,X,x1,x2);
 
-figure;
-histogram(err)
-
 fprintf('\nMean reprojection error --> %.2f\n', mean_err);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
