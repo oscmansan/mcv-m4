@@ -393,7 +393,7 @@ end
 
 im = [uint8(Il), im, uint8(Ir), flip(im)];
 
-filename = 'view_morphing.gif'; % Specify the output file name
+filename = 'Output/view_morphing.gif'; % Specify the output file name
 for idx = 1:length(im)
     [A,map] = rgb2ind(im{idx},256);
     if idx == 1
