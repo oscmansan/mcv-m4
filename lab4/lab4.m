@@ -360,15 +360,29 @@ e = 1;
 im = {};
 for s = [0.2, 0.4, 0.6, 0.8]
     ims = zeros(size(Il));
+    for i = 1:size(Ir,1)
+        for j = size(Ir,2):-1:1
+            k = j+dr(i,j);
+            k = min(max(k,1),size(Il,2));
+            p = round(s*j+(1-s)*k);
+            if abs(dr(i,j)-dl(i,k)) <= e  % check for occlusions
+                ims(i,p,:) = (1-s)*Il(i,k,:)+s*Ir(i,j,:);
+            else
+                if dr(i,j) >= 0 && dr(i,j) < Inf % solve left occlusion
+                    ims(i,p,:) = Ir(i,j,:);
+                end
+            end
+        end
+    end
     for i = 1:size(Il,1)
         for j = 1:size(Il,2)
             k = j-dl(i,j);
             k = min(max(k,1),size(Ir,2));
-            p = floor((1-s)*j+s*k);
-            if abs(dl(i,j)-dr(i,k)) < e  % check for occlusions
+            p = round((1-s)*j+s*k);
+            if abs(dl(i,j)-dr(i,k)) <= e  % check for occlusions
                 ims(i,p,:) = (1-s)*Il(i,j,:)+s*Ir(i,k,:);
             else
-                if dl(i,j) >= 0 && dl(i,j) < Inf  % solve right occlusion
+                if dl(i,j) >= 0 && dl(i,j) < Inf % solve right occlusion
                     ims(i,p,:) = Il(i,j,:);
                 end
             end
