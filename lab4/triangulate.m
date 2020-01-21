@@ -20,8 +20,8 @@ function X_trian = triangulate(x1, x2, P1, P2, imsize)
 
 
     %Convert to homogeneous coordinates
-    x1 = [x1(1)/x1(3), x1(2)/x1(3), 1];
-    x2 = [x2(1)/x2(3), x2(2)/x2(3), 1];
+    x1 = homog(x1);
+    x2 = homog(x2);
 
     %Build the constraint matrix
     A = [x1(1)*P1(3,:) - P1(1,:);
@@ -33,6 +33,4 @@ function X_trian = triangulate(x1, x2, P1, P2, imsize)
 
     % Take the last column of the transposed of V, that's the singular
     % vector with the lowest singular value.
-    X_trian = V(:,4)./V(4,4);
-
-     
+    X_trian = V(:,end)./V(end,end);
