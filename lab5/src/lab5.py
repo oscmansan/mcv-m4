@@ -148,7 +148,7 @@ def main(argv):
                 print('  Projective 3D points added to tracks')
 
             # TODO compute projective reprojection error
-            error_prj = rc.compute_reproj_error(Xprj, cams_pr)
+            error_prj = rc.compute_reproj_error(Xprj, x1, x2, cams_pr)
             if h.debug >0:
                 print("    Projective reprojection error:", error_prj)
             
@@ -167,7 +167,7 @@ def main(argv):
                 print('  Affine 3D points added to tracks')
             
             # TODO compute affine reprojection error (reuse your code)
-            error_aff = rc.compute_reproj_error(Xaff, cams_aff)
+            error_aff = rc.compute_reproj_error(Xaff, x1, x2, cams_aff)
             if h.debug >0:
                 print("    Affine reprojection error:", error_aff)
 
@@ -185,7 +185,7 @@ def main(argv):
                 print('  Euclidean 3D points added to tracks')
             
             # TODO compute metric reprojection error (reuse your code)
-            error_euc = rc.compute_reproj_error(Xeuc, cams_euc)
+            error_euc = rc.compute_reproj_error(Xeuc, x1, x2, cams_euc)
             if h.debug >0:
                 print("    Euclidean reprojection error:", error_euc)
 

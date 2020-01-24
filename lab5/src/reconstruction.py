@@ -12,14 +12,11 @@ def compute_proj_camera(F, i):
     e = mth.nullspace(F.T)
 
     # build [e]_x
-    e_x = np.asarray([[0, -e[2], e[1]],
-           [e[2], 0, -e[0]],
-           [-e[1], e[0], 0]
-    ])
+    e_x = mth.hat_operator(e)
 
     # compute P
     P = e_x@F
-    P = np.concatenate((P,e),axis=1)
+    P = np.concatenate((P, e), axis=1)
 
     return P
 
@@ -35,8 +32,28 @@ def estimate_3d_points(P1, P2, xr1, xr2):
 
     return Xprj
 
-def compute_reproj_error(X, cam): 
-    # your code here 
+def compute_reproj_error(X, x1, x2, cam): 
+    # your code here
+
+    # initialize variables
+    error = 0
+
+    # reshape X
+    X = np.reshape(X, (X.shape[1], X.shape[0]))
+
+    for i, X_point in enumerate(X):
+        # compute reprojected points
+        x1_reprojected = cam[0]@X_point
+        x2_reprojected = cam[1]@X_point
+        # convert to euclidean coordinates
+        x1_reprojected = [x1_reprojected[0] / x1_reprojected[2], x1_reprojected[1] / x1_reprojected[2]]
+        x2_reprojected = [x2_reprojected[0] / x2_reprojected[2], x2_reprojected[1] / x2_reprojected[2]]
+        # compute reprojection error
+        e1 = (x1[i][0] - x1_reprojected[0]) ** 2 + (x1[i][1] - x1_reprojected[1]) ** 2
+        e2 = (x2[i][0] - x2_reprojected[0]) ** 2 + (x2[i][1] - x2_reprojected[1]) ** 2
+        e = e1 + e2
+        # accumulate
+        error += e
 
     return error
 

@@ -124,14 +124,14 @@ def search_more_matches(out1, out2, F):
     out2h = make_homogeneous(out2)
 
     # for each outlier
-    for o1,o2,o1h,o2h in zip(out1,out2,out1h,out2h):
+    for o1, o2, o1h, o2h in zip(out1, out2, out1h, out2h):
         # compute epipolar lines
         l2 = F@o1h
         l1 = F.T@o2h
         # compute epipolar error
-        d1 = abs(o1h.T@l1/((l1[0]**2 + l1[1]**2)**0.5))
-        d2 = abs(o2h.T@l2/((l2[0]**2 + l2[1]**2)**0.5))
-        d = d1+d2
+        d1 = abs(o1h.T@l1 / ((l1[0] ** 2 + l1[1] ** 2) ** 0.5))
+        d2 = abs(o2h.T@l2 / ((l2[0] ** 2 + l2[1] ** 2) ** 0.5))
+        d = d1 + d2
         # check distance threshold
         if d < max_d:
             in1.append(o1)
