@@ -112,7 +112,35 @@ def refine_matches(x1, x2, F):
 def search_more_matches(out1, out2, F):
     # your code here
 
-    return xn1, xn2, out1, out2
+    # initialize variables
+    max_d = 0.00155 # lab5.py specifies this value, but in
+                    # http://wiki.ros.org/camera_calibration/Tutorials/StereoCalibration
+                    # we see that below 0.25 error is acceptable and below 0.1 is excellent,
+                    # maybe we should try those values
+    in1, in2, new_out1, new_out2 = [], [], [], []
+
+    # make coordinates homogeneous
+    out1h = make_homogeneous(out1)
+    out2h = make_homogeneous(out2)
+
+    # for each outlier
+    for o1,o2,o1h,o2h in zip(out1,out2,out1h,out2h):
+        # compute epipolar lines
+        l2 = F@o1h
+        l1 = F.T@o2h
+        # compute epipolar error
+        d1 = abs(o1h.T@l1/((l1[0]**2 + l1[1]**2)**0.5))
+        d2 = abs(o2h.T@l2/((l2[0]**2 + l2[1]**2)**0.5))
+        d = d1+d2
+        # check distance threshold
+        if d < max_d:
+            in1.append(o1)
+            in2.append(o2)
+        else:
+            new_out1.append(o1)
+            new_out2.append(o2)
+
+    return np.asarray(in1), np.asarray(in2), np.asarray(new_out1), np.asarray(new_out2)
 
 def make_homogeneous(p):
     if p.shape[1] != 2 : 

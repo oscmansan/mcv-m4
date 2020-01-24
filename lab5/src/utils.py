@@ -20,7 +20,7 @@ if debug > 2:
 debug_display = False
 normalise = True #Activate coordinate normalisation 
 opencv = False #Whether use opencv or matplot to display images
-path_imgs="<path_to>/castle_dense_large/urd/"
+path_imgs = "../datasets/castle_dense_large/urd/"
 
 def read_image(n):
     #Read an image from file. This method assumes images are a numbered sequence

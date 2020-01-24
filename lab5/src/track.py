@@ -141,4 +141,4 @@ def add_tracks(xi, xj, xri, xrj, i, j, tracks, hs_vs):
 
 def add_pts_tracks(Xaff, x1, x2, tracks, hs_vs):
     # your code here
-
+    pass

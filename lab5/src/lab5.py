@@ -98,9 +98,13 @@ def main(argv):
                     xn1, xn2, o1, o2 = fd.search_more_matches(o1, o2, F)
 
                     # join the new matches to the inliers
-                    x1 = np.concatenate((xs1, xn1), axis=0)
-                    x2 = np.concatenate((xs2, xn2), axis=0)
                     incr_match = xn1.shape[0]
+                    if incr_match != 0:
+                        x1 = np.concatenate((xs1, xn1), axis=0)
+                        x2 = np.concatenate((xs2, xn2), axis=0)
+                    else:
+                        x1 = xs1
+                        x2 = xs2
                     eight_alg = True
 
                 if h.debug >= 0:
