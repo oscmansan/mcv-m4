@@ -144,7 +144,7 @@ def main(argv):
                 print('  Projective 3D points added to tracks')
 
             # TODO compute projective reprojection error
-            error_prj = rc.compute_reproj_error(Xprj, cams_pr)
+            error_prj = rc.compute_reproj_error(Xprj, cams_pr[i-1], cams_pr[i], xr1, xr2)
             if h.debug >0:
                 print("    Projective reprojection error:", error_prj)
             

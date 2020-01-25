@@ -31,28 +31,15 @@ def estimate_3d_points(P1, P2, xr1, xr2):
 
     return Xprj
 
-def compute_reproj_error(X, x1, x2, cam):
+def compute_reproj_error(X, P1, P2, xr1, xr2):
     # your code here
 
-    # initialize variables
-    error = 0
+    xp1 = P1@X
+    xp2 = P2@X
+    xp1 = xp1[0:2, :] / xp1[None, 2, :]
+    xp2 = xp2[0:2, :] / xp2[None, 2, :]
 
-    # reshape X
-    X = np.reshape(X, (X.shape[1], X.shape[0]))
-
-    for i, X_point in enumerate(X):
-        # compute reprojected points
-        x1_reprojected = cam[0]@X_point
-        x2_reprojected = cam[1]@X_point
-        # convert to euclidean coordinates
-        x1_reprojected = [x1_reprojected[0] / x1_reprojected[2], x1_reprojected[1] / x1_reprojected[2]]
-        x2_reprojected = [x2_reprojected[0] / x2_reprojected[2], x2_reprojected[1] / x2_reprojected[2]]
-        # compute reprojection error
-        e1 = (x1[i][0] - x1_reprojected[0]) ** 2 + (x1[i][1] - x1_reprojected[1]) ** 2
-        e2 = (x2[i][0] - x2_reprojected[0]) ** 2 + (x2[i][1] - x2_reprojected[1]) ** 2
-        e = e1 + e2
-        # accumulate
-        error += e
+    error = np.sum(np.sum((xr1-xp1)**2)+np.sum((xr2-xp2)**2))
 
     return error
 

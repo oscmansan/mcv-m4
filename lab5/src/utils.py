@@ -18,7 +18,7 @@ debug = 1
 if debug > 2:
     np.set_printoptions(threshold=sys.maxsize) #print full arrays
 
-debug_display = True
+debug_display = False
 normalise = True #Activate coordinate normalisation 
 opencv = True #Whether use opencv or matplot to display images
 path_imgs="../data/castle_dense_large/urd/"
@@ -83,6 +83,13 @@ def draw_matches(img1, img2, x1, x2):
         img2 = cv2.circle(img2,tuple(pt2.astype(int)),5,color, -1)
 
     return img1,img2
+
+def draw_matches_cv(img1, img2, x1, x2):
+    kp1 = [cv2.KeyPoint(p[0], p[1], 1) for p in x1]
+    kp2 = [cv2.KeyPoint(p[0], p[1], 1) for p in x2]
+    matches = [cv2.DMatch(i, i, 0) for i in range(len(kp1))]
+    img3 = cv2.drawMatches(img1, kp1, img2, kp2, matches, None, flags=2)
+    plt.imshow(img3), plt.show()
 
 def display_epilines(img1, img2, x1, x2, F):
     # Find epilines corresponding to points in right image (second image) and

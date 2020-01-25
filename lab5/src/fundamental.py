@@ -91,7 +91,7 @@ def apply_mask(x1, x2, mask, F):
 
 def refine_matches(x1, x2, F):
     # use the optimal triangulation method (Algorithm 12.1 from MVG)
-    nx1, nx2 = cv2.correctMatches(F, np.reshape(x1, (1, -1, 2)), np.reshape(x2, (1, -1, 2))) 
+    nx1, nx2 = cv2.correctMatches(F, np.reshape(x1, (1, -1, 2)), np.reshape(x2, (1, -1, 2)))
 
     # get the points back in matrix configuration
     xr1 = np.float32(np.reshape(nx1,(-1, 2)))
@@ -121,13 +121,22 @@ def search_more_matches(out1, out2, F):
     on1 = np.empty([0, 2], dtype=np.int32)
     on2 = np.empty([0, 2], dtype=np.int32)
 
-    for o1, o2 in zip(outh1, outh2):
-        if o2.T@F@o1 <= 0.00155:
-            xn1 = np.r_[xn1, [o1[0:2]/o1[2]]]
-            xn2 = np.r_[xn2, [o2[0:2]/o2[2]]]
+    for oh1, oh2 in zip(outh1, outh2):
+        # compute epipolar lines
+        l1 = F.T@oh2
+        l2 = F@oh1
+
+        # distance from a point to a line
+        d1 = abs(np.dot(l1, oh1)) / np.sqrt(np.sum(l1[0:2]**2))
+        d2 = abs(np.dot(l2, oh2)) / np.sqrt(np.sum(l2[0:2]**2))
+
+        e = 0.00155
+        if (d1 <= e) and (d2 <= e):
+            xn1 = np.r_[xn1, [np.int32(oh1[0:2]/oh1[2])]]
+            xn2 = np.r_[xn2, [np.int32(oh2[0:2]/oh2[2])]]
         else:
-            on1 = np.r_[on1, [o1[0:2]/o1[2]]]
-            on2 = np.r_[on2, [o2[0:2]/o2[2]]]
+            on1 = np.r_[on1, [np.int32(oh1[0:2]/oh1[2])]]
+            on2 = np.r_[on2, [np.int32(oh2[0:2]/oh2[2])]]
 
     return xn1, xn2, on1, on2
 
