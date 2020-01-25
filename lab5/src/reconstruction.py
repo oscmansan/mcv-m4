@@ -8,15 +8,14 @@ def compute_proj_camera(F, i):
     # Result 9.15 of MVG (v = 0, lambda = 1). It assumes P1 = [I|0]
     # your code here
 
-    # compute epipole
+    # compute epipole e'
     e = mth.nullspace(F.T)
 
-    # build [e]_x
-    e_x = mth.hat_operator(e)
+    # build [e']_x
+    ske = mth.hat_operator(e)
 
     # compute P
-    P = e_x@F
-    P = np.concatenate((P, e), axis=1)
+    P = np.concatenate((ske@F, e), axis=1)
 
     return P
 
@@ -32,7 +31,7 @@ def estimate_3d_points(P1, P2, xr1, xr2):
 
     return Xprj
 
-def compute_reproj_error(X, x1, x2, cam): 
+def compute_reproj_error(X, x1, x2, cam):
     # your code here
 
     # initialize variables

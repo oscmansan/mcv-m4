@@ -98,13 +98,9 @@ def main(argv):
                     xn1, xn2, o1, o2 = fd.search_more_matches(o1, o2, F)
 
                     # join the new matches to the inliers
+                    x1 = np.concatenate((xs1, xn1), axis=0)
+                    x2 = np.concatenate((xs2, xn2), axis=0)
                     incr_match = xn1.shape[0]
-                    if incr_match != 0:
-                        x1 = np.concatenate((xs1, xn1), axis=0)
-                        x2 = np.concatenate((xs2, xn2), axis=0)
-                    else:
-                        x1 = xs1
-                        x2 = xs2
                     eight_alg = True
 
                 if h.debug >= 0:
@@ -128,11 +124,11 @@ def main(argv):
 
             # compute projective cameras to use in projective reconstruction
             if i == 1:
-            # TODO Compute the projective camera given F, according to
-            # Result 9.15 of MVG (v = 0, lambda = 1). 
+                # TODO Compute the projective camera given F, according to
+                # Result 9.15 of MVG (v = 0, lambda = 1).
                 cams_pr.append(rc.compute_proj_camera(F, i))
             else:
-            # TODO Compute resection as in MVG, Alg 7.1 
+                # TODO Compute resection as in MVG, Alg 7.1
                 cams_pr.append(rc.resection(tracks, i))
             if h.debug >= 0:
                 print("  Resection of camera", i, "performed")
@@ -148,7 +144,7 @@ def main(argv):
                 print('  Projective 3D points added to tracks')
 
             # TODO compute projective reprojection error
-            error_prj = rc.compute_reproj_error(Xprj, x1, x2, cams_pr)
+            error_prj = rc.compute_reproj_error(Xprj, cams_pr)
             if h.debug >0:
                 print("    Projective reprojection error:", error_prj)
             
@@ -167,7 +163,7 @@ def main(argv):
                 print('  Affine 3D points added to tracks')
             
             # TODO compute affine reprojection error (reuse your code)
-            error_aff = rc.compute_reproj_error(Xaff, x1, x2, cams_aff)
+            error_aff = compute_reproj_error(Xaff, cams_aff)
             if h.debug >0:
                 print("    Affine reprojection error:", error_aff)
 
@@ -185,7 +181,7 @@ def main(argv):
                 print('  Euclidean 3D points added to tracks')
             
             # TODO compute metric reprojection error (reuse your code)
-            error_euc = rc.compute_reproj_error(Xeuc, x1, x2, cams_euc)
+            error_euc = compute_reproj_error(Xeuc, cams_euc)
             if h.debug >0:
                 print("    Euclidean reprojection error:", error_euc)
 

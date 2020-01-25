@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 
 import utils as h
+import maths as mth
 
 def normalise_coord(p1, p2):
     # normalise both sets
@@ -69,7 +70,7 @@ def apply_mask(x1, x2, mask, F):
         print("before F mask:\n")
         xh1 = make_homogeneous(x1)
         xh2 = make_homogeneous(x2)
-        print_epipolar_eq(xh1, xh2, F)
+        mth.print_epipolar_eq(xh1, xh2, F)
 
     # apply mask of inliers to the set of matches
     x1 = x1[mask.ravel()==1]
@@ -79,7 +80,7 @@ def apply_mask(x1, x2, mask, F):
         print("after F mask:\n")
         xh1 = make_homogeneous(x1)
         xh2 = make_homogeneous(x2)
-        print_epipolar_eq(xh1, xh2, F)
+        mth.print_epipolar_eq(xh1, xh2, F)
 
     if h.debug >= 0:
         print("    Mask given by F applied")
@@ -105,12 +106,13 @@ def refine_matches(x1, x2, F):
         print("after correctMatches: ")
         xrh1 = make_homogeneous(xr1)
         xrh2 = make_homogeneous(xr2)
-        print_epipolar_eq(xrh1, xrh2, F)
+        mth.print_epipolar_eq(xrh1, xrh2, F)
 
     return xr1.T, xr2.T 
 
 def search_more_matches(out1, out2, F):
     # your code here
+
     outh1 = make_homogeneous(out1)
     outh2 = make_homogeneous(out2)
 
