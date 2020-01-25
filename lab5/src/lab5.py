@@ -123,8 +123,8 @@ def main(argv):
                     print("    Size of hash table of views:",len(hs_vs))
 
                 if h.debug_display:
-                    h.display_epilines(imgs[prev], imgs[i], x1.T, x2.T, F)
-                    h.show_matches(imgs[prev], imgs[i], x1.T, x2.T)
+                    h.display_epilines(imgs[prev], imgs[i], x1, x2, F)
+                    h.show_matches(imgs[prev], imgs[i], x1, x2)
 
             # compute projective cameras to use in projective reconstruction
             if i == 1:

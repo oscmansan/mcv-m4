@@ -1,5 +1,6 @@
 import sys
 import cv2
+import numpy as np
 
 # render 2d/3d plots
 import matplotlib.pyplot as plt 
@@ -17,10 +18,10 @@ debug = 1
 if debug > 2:
     np.set_printoptions(threshold=sys.maxsize) #print full arrays
 
-debug_display = False
+debug_display = True
 normalise = True #Activate coordinate normalisation 
-opencv = False #Whether use opencv or matplot to display images
-path_imgs = "../datasets/castle_dense_large/urd/"
+opencv = True #Whether use opencv or matplot to display images
+path_imgs="../data/castle_dense_large/urd/"
 
 def read_image(n):
     #Read an image from file. This method assumes images are a numbered sequence
