@@ -134,7 +134,7 @@ def main(argv):
                 print("  Resection of camera", i, "performed")
 
             # projective triangulation for 3D structure
-            Xprj = rc.estimate_3d_points(cams_pr[i-1], cams_pr[i], xr1, xr2)
+            Xprj = rc.estimate_3d_points(cams_pr[i-1], cams_pr[i], xr1, xr2)  # when n>2, Ps and xs don't agree!
             if h.debug >= 0:
                 print('  Projective reconstruction estimated')
 
