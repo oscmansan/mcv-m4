@@ -152,8 +152,9 @@ def main(argv):
             vps.append(vp.estimate_vps(imgs[i]))
             # TODO Estimate homografy that makes an affine rectification
             # With the vanishing points, the plane at the infinity is computed. 
-            # Then  the affine homography is built with the coordinates of the infinity plane
+            # Then the affine homography is built with the coordinates of the infinity plane
             aff_hom = ac.estimate_aff_hom(cams_pr[i-1:], vps[i-1:])
+
             # TODO Transform 3D points and cameras to affine space
             Xaff, cams_aff = rc.transform(aff_hom, Xprj, cams_pr)
 
@@ -163,7 +164,7 @@ def main(argv):
                 print('  Affine 3D points added to tracks')
             
             # TODO compute affine reprojection error (reuse your code)
-            error_aff = compute_reproj_error(Xaff, cams_aff)
+            error_aff = rc.compute_reproj_error(Xaff, cams_aff[i-1], cams_aff[i], xr1, xr2)
             if h.debug >0:
                 print("    Affine reprojection error:", error_aff)
 
@@ -181,7 +182,7 @@ def main(argv):
                 print('  Euclidean 3D points added to tracks')
             
             # TODO compute metric reprojection error (reuse your code)
-            error_euc = compute_reproj_error(Xeuc, cams_euc)
+            error_euc = rc.compute_reproj_error(Xeuc, cams_euc)
             if h.debug >0:
                 print("    Euclidean reprojection error:", error_euc)
 

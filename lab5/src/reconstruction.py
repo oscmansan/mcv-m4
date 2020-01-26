@@ -44,6 +44,13 @@ def compute_reproj_error(X, P1, P2, xr1, xr2):
 
 def transform(aff_hom, Xprj, cams_pr):
     # your code here
+    # Algorithm 19.2
+    # cams --> PiH ,
+    # 3D points --> H^(−1)X
+    Xaff = -(aff_hom@Xprj)
+    Xaff = Xaff / Xaff[3, :]
+
+    cams_aff = [cam@aff_hom.T for cam in cams_pr]
 
     return Xaff, cams_aff
 
