@@ -47,10 +47,10 @@ def transform(aff_hom, Xprj, cams_pr):
     # Algorithm 19.2
     # cams --> PiH ,
     # 3D points --> H^(−1)X
-    Xaff = -(aff_hom@Xprj)
+    Xaff = np.linalg.inv(aff_hom)@Xprj
     Xaff = Xaff / Xaff[3, :]
 
-    cams_aff = [cam@aff_hom.T for cam in cams_pr]
+    cams_aff = [cam@aff_hom for cam in cams_pr]
 
     return Xaff, cams_aff
 

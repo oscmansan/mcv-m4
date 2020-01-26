@@ -14,7 +14,7 @@ def estimate_aff_hom(cams, vps):
 
     aff_hom = np.r_[
         np.c_[np.eye(3), np.zeros(3)],
-        infinity_plane.T
+        -infinity_plane.T
     ]
 
     return aff_hom
