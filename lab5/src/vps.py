@@ -16,8 +16,8 @@ def estimate_vps(img):
         print ("      vps coordinates:\n", vpd.vps_2D )
     if h.debug > 2: 
         print ("      length threshold:", length_thresh)
-        print ("      principal point:", principal_point)
-        print ("      focal length:", focal_length)
+        print ("      principal point:", vpd.principal_point)
+        print ("      focal length:", vpd.focal_length)
         print ("      seed:", seed)
 
     return vpd.vps_2D

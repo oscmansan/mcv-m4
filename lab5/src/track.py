@@ -141,4 +141,14 @@ def add_tracks(xi, xj, xri, xrj, i, j, tracks, hs_vs):
 
 def add_pts_tracks(Xaff, x1, x2, tracks, hs_vs):
     # your code here
-    pass
+    points_3d = [[Xaff[0][p],Xaff[1][p],Xaff[2][p],Xaff[3][p]] for p in range(len(Xaff[0]))]
+
+    for pt_3d, fi, fj, v in zip(points_3d, x1, x2, tracks):
+        tfi = tuple(fi)
+        tfj = tuple(fj)
+
+        if hs_vs[tfi] is not hs_vs[tfj]: 
+            print("There exist multiple tracks for the same hash")
+            exit()
+        v = hs_vs[tfi]
+        v.pt = tuple(pt_3d)
