@@ -113,6 +113,8 @@ def refine_matches(x1, x2, F):
 def search_more_matches(out1, out2, F):
     # your code here
 
+    e = 0.00155
+
     outh1 = make_homogeneous(out1)
     outh2 = make_homogeneous(out2)
 
@@ -129,9 +131,9 @@ def search_more_matches(out1, out2, F):
         # distance from a point to a line
         d1 = abs(np.dot(l1, oh1)) / np.sqrt(np.sum(l1[0:2]**2))
         d2 = abs(np.dot(l2, oh2)) / np.sqrt(np.sum(l2[0:2]**2))
+        d = d1 + d2
 
-        e = 0.00155
-        if (d1 <= e) and (d2 <= e):
+        if d < e:
             xn1 = np.r_[xn1, [np.int32(oh1[0:2]/oh1[2])]]
             xn2 = np.r_[xn2, [np.int32(oh2[0:2]/oh2[2])]]
         else:
