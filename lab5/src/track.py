@@ -2,11 +2,12 @@ import numpy as np
 
 import utils as h
 
+
 class Track:
     # A class for storing a 3d point and its views from cameras
     def __init__(self, view, rview, img, hs_vs, pt = None):
-        self.views = {}     # dictionary: {#cam, 2d point}
-        self.ref_views = {} # dictionary: {#cam, 2d point}. Refined views according to F
+        self.views = {}      # dictionary: {#cam, 2d point}
+        self.ref_views = {}  # dictionary: {#cam, 2d point}. Refined views according to F
         self.views[img] = view
         self.ref_views[img] = rview
         hs_vs[view] = self 
@@ -33,7 +34,7 @@ class Track:
             if h.debug > 2:
                 print("    view and rview added to Track")
         elif view is not self.views[img]:
-            #conflict of views
+            # conflict of views
             self.deal_with_conflicts(view, self.views[img])
             self.deal_with_conflicts(rview, self.ref_views[img])
             if h.debug > 2:
@@ -45,7 +46,7 @@ class Track:
                     if h.debug > 2:
                         print("    pt assigned")
                 else:
-                    if (np.linalg.norm(np.array(pt) - np.array(self.pt)) < 1):
+                    if np.linalg.norm(np.array(pt) - np.array(self.pt)) < 1:
                         self.pt = (pt + self.pt)*0.5
                         if h.debug > 2:
                             print("    pt averaged")
@@ -57,7 +58,7 @@ class Track:
             return True
 
     def is_in_views(self, view, img):
-        if is_in_views(img):
+        if self.is_in_views(img):
             if view is self.views[img]:
                 return True
             else: 
@@ -71,9 +72,10 @@ class Track:
             new_vw = ((v1[0] + v2[0])*0.5, (v1[1] + v2[1])*0.5)
         return new_vw
 
-    def merge (self, views):
+    def merge(self, views):
         for key in views.views.keys():
             self.add_view(views.views[key], views.ref_views[key], key, None, views.pt)
+
 
 def add_tracks(xi, xj, xri, xrj, i, j, tracks, hs_vs):
     # Add views matched to the tracks and to the hash table of tracks
@@ -90,8 +92,8 @@ def add_tracks(xi, xj, xri, xrj, i, j, tracks, hs_vs):
         #print ("trfj:",tuple(rfj))
 
         if h.debug > 2:
-            print ("x1 is in hs_vs?", fi_is_v)
-            print ("x2 is in hs_vs?", fj_is_v)
+            print("x1 is in hs_vs?", fi_is_v)
+            print("x2 is in hs_vs?", fj_is_v)
             
         if not fi_is_v and not fj_is_v: 
             # create a new view and add the matches to it and to the hash table of tracks
@@ -99,24 +101,24 @@ def add_tracks(xi, xj, xri, xrj, i, j, tracks, hs_vs):
             v.add_view(tfj, tuple(rfj), j, hs_vs)
             tracks.append(v)
             if h.debug > 2:
-                print ("Track created and view added")
-                print("track", v,":")
+                print("Track created and view added")
+                print("track", v, ":")
                 for key, view in v.views.items():
-                    print("view[",key,"]: ",view)
+                    print("view[", key, "]: ", view)
                 for key, rview in v.ref_views.items():
-                    print("refined view[",key,"]: ", rview)
+                    print("refined view[", key, "]: ", rview)
         elif not fi_is_v: 
             # retrieve the view and add the orphan to it and to the hash table
             v = hs_vs[tfj]
             v.add_view(tfi, tuple(rfi), i, hs_vs)
             if h.debug > 2:
-                print ("view 1 added")
+                print("view 1 added")
         elif not fj_is_v: 
             # retrieve the view and add the orphan to it and to the hash table
             v = hs_vs[tfi]
             v.add_view(tfj, tuple(rfj), j, hs_vs)
             if h.debug > 2:
-                print ("view 2 added")
+                print("view 2 added")
         else:
             # both are in hash table
             if hs_vs[tfi] is not hs_vs[tfj]: 
@@ -128,27 +130,21 @@ def add_tracks(xi, xj, xri, xrj, i, j, tracks, hs_vs):
                     v.merge(w)
                     hs_vs[tfj] = v
                     if h.debug > 2:
-                        print ("view 2 merged into 1")
+                        print("view 2 merged into 1")
                 else:
                     w.merge(v)
                     hs_vs[tfi] = w
                     if h.debug > 2:
-                        print ("view 1 merged into 2")
+                        print("view 1 merged into 2")
 
             #v = hs_vs[tfi]
             #if not v.is_in_views(tfj, j):
             #    v.add_view(tfj, tuple(rfj), j)
 
-def add_pts_tracks(Xaff, x1, x2, tracks, hs_vs):
-    # your code here
-    points_3d = [[Xaff[0][p],Xaff[1][p],Xaff[2][p],Xaff[3][p]] for p in range(len(Xaff[0]))]
 
-    for pt_3d, fi, fj, v in zip(points_3d, x1, x2, tracks):
-        tfi = tuple(fi)
-        tfj = tuple(fj)
-
-        if hs_vs[tfi] is not hs_vs[tfj]: 
-            print("There exist multiple tracks for the same hash")
-            exit()
-        v = hs_vs[tfi]
-        v.pt = tuple(pt_3d)
+def add_pts_tracks(X, x1, x2, tracks, hs_vs):
+    for pt, v, w in zip(X.T, x1, x2):
+        t1 = hs_vs[tuple(v)]
+        t2 = hs_vs[tuple(w)]
+        assert (t1 is t2)
+        t1.pt = tuple(pt[0:3] / pt[3])

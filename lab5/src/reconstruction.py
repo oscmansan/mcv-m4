@@ -4,6 +4,7 @@ import numpy as np
 import utils as h
 import maths as mth
 
+
 def compute_proj_camera(F, i):
     # Result 9.15 of MVG (v = 0, lambda = 1). It assumes P1 = [I|0]
 
@@ -18,6 +19,7 @@ def compute_proj_camera(F, i):
 
     return P
 
+
 def estimate_3d_points(P1, P2, xr1, xr2):
     # Triangulate 3D points from camera matrices
     Xprj = cv2.triangulatePoints(P1, P2, xr1, xr2) 
@@ -29,6 +31,7 @@ def estimate_3d_points(P1, P2, xr1, xr2):
         print("  X estimated:\n", Xprj)
 
     return Xprj
+
 
 def compute_reproj_error(X, P1, P2, xr1, xr2):
     # project 3D points using P
@@ -42,15 +45,14 @@ def compute_reproj_error(X, P1, P2, xr1, xr2):
 
     return error
 
+
 def transform(aff_hom, Xprj, cams_pr):
-    # your code here
-    # Algorithm 19.2
-    # cams --> PiH ,
-    # 3D points --> H^(−1)X
-    Xaff = np.linalg.inv(aff_hom)@Xprj
+    # Algorithm 19.2 of MVG
+
+    Xaff = aff_hom@Xprj
     Xaff = Xaff / Xaff[3, :]
 
-    cams_aff = [cam@aff_hom for cam in cams_pr]
+    cams_aff = [cam@np.linalg.inv(aff_hom) for cam in cams_pr]
 
     return Xaff, cams_aff
 
