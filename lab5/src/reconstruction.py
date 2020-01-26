@@ -65,11 +65,10 @@ def resection(tracks, i):
         if i in tk.views:
             pts3d.append(tk.pt)
             pts2d.append(tk.views[i])
-    pts3d = np.array(pts3d)
-    pts2d = np.array(pts2d)
+    pts3d = np.asarray(pts3d)
+    pts2d = np.asarray(pts2d)
 
     # convert to homogeneous coordinates
-    pts3d = homog(pts3d)
     pts2d = homog(pts2d)
 
     # normalize points

@@ -147,4 +147,4 @@ def add_pts_tracks(X, x1, x2, tracks, hs_vs):
         t1 = hs_vs[tuple(v)]
         t2 = hs_vs[tuple(w)]
         assert (t1 is t2)
-        t1.pt = tuple(pt[0:3] / pt[3])
+        t1.pt = pt

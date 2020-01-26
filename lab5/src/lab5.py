@@ -187,6 +187,7 @@ def main(argv):
                 print("    Euclidean reprojection error:", error_euc)
 
             # Bundle Adjustment
+            '''
             # TODO Adapt cameras and 3D points to PySBA format
             cams_ba, X_ba, x_ba, cam_idxs, x_idxs = ba.adapt_format_pysba(tracks)
             badj = ba.PySBA(cams_ba, X_ba, x_ba, cam_idxs, x_idxs)
@@ -195,6 +196,7 @@ def main(argv):
             tk.update_ba_pts_tracks(Xeuc, tracks)
             if h.debug >= 0:
                 print("  Bundle Adjustment performed over", i, "images")
+            '''
 
             # render results
             if h.debug_display:
