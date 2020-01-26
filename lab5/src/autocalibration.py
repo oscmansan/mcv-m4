@@ -1,12 +1,21 @@
 import numpy as np
-
-import utils as h
 import reconstruction as rc
 import maths as mth
 import fundamental as fd
 
 def estimate_aff_hom(cams, vps):
     # your code here
+    # Compute 3D Vanishing points
+    world_vanishing = rc.estimate_3d_points(cams[0], cams[1], vps[0].T, vps[1].T)
+
+    # Compute plane at infinity
+    infinity_plane = mth.nullspace(world_vanishing.T)
+    infinity_plane = infinity_plane / infinity_plane[3, :]
+
+    aff_hom = np.r_[
+        np.c_[np.eye(3), np.zeros(3)],
+        infinity_plane.T
+    ]
 
     return aff_hom
 
