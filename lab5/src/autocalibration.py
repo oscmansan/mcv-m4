@@ -23,7 +23,7 @@ def estimate_euc_hom(cams, vps):
     # your code here
 
     # make points homogeneous
-    vpsh = [fd.make_homogeneous(vp) for vp in vps]
+    vpsh = fd.make_homogeneous(vps)
 
     # build A
     u = vpsh[0]
@@ -35,11 +35,11 @@ def estimate_euc_hom(cams, vps):
     	[ v[0]*z[0], v[0]*z[1] + v[1]*z[0], v[0]*z[2] + v[2]*z[0], v[1]*z[1], v[1]*z[2] + v[2]*z[1], v[2]*z[2] ],
     	[ 0, 1, 0, 0, 0, 0 ],
     	[ 1, 0, 0, -1, 0, 0 ]
-
     ]
 
     # find w_v
     w_v = mth.nullspace(A)
+    w_v = np.reshape(w_v,-1)
 
     # build w
     w = [
@@ -58,4 +58,4 @@ def estimate_euc_hom(cams, vps):
     # build euc_hom
     euc_hom = np.concatenate((np.concatenate((np.linalg.inv(A),np.zeros((1,3))), axis=0),np.asarray([[0, 0, 0, 1]]).T), axis=1)
 
-    return euc_hom 
+    return euc_hom

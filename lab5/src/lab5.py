@@ -182,7 +182,7 @@ def main(argv):
                 print('  Euclidean 3D points added to tracks')
             
             # TODO compute metric reprojection error (reuse your code)
-            error_euc = rc.compute_reproj_error(Xeuc, cams_euc)
+            error_euc = rc.compute_reproj_error(Xeuc, cams_euc[i-1], cams_euc[i], xr1, xr2)
             if h.debug >0:
                 print("    Euclidean reprojection error:", error_euc)
 
@@ -225,4 +225,3 @@ Optional tasks
 """
 
 main(sys.argv)
-
