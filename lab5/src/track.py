@@ -128,12 +128,14 @@ def add_tracks(xi, xj, xri, xrj, i, j, tracks, hs_vs):
                 if v.views.keys() > w.views.keys():
                     # The smaller is added to the bigger
                     v.merge(w)
-                    hs_vs[tfj] = v
+                    for tfk in w.views.values():
+                        hs_vs[tfk] = v
                     if h.debug > 2:
                         print("view 2 merged into 1")
                 else:
                     w.merge(v)
-                    hs_vs[tfi] = w
+                    for tfk in v.views.values():
+                        hs_vs[tfk] = w
                     if h.debug > 2:
                         print("view 1 merged into 2")
 
