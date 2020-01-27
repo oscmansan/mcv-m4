@@ -145,3 +145,46 @@ class PySBA:
         params, points_3d = self.optimizedParams(res.x, numCameras, numPoints)
 
         return params, points_3d
+
+def adapt_format_pysba(tracks, cams, i):
+    """
+    Convert the specifications for each variable:
+
+            cameraArray with shape (n_cameras, 9) contains initial estimates of parameters for all cameras.
+                    First 3 components in each row form a rotation vector,
+                    next 3 components form a translation vector,
+                    then a focal distance and two distortion parameters.
+
+            points_3d with shape (n_points, 3)
+                    contains initial estimates of point coordinates in the world frame.
+
+            camera_ind with shape (n_observations,)
+                    contains indices of cameras (from 0 to n_cameras - 1) involved in each observation.
+
+            point_ind with shape (n_observations,)
+                    contains indices of points (from 0 to n_points - 1) involved in each observation.
+
+            points_2d with shape (n_observations, 2)
+                    contains measured 2-D coordinates of points projected on images in each observations.
+        """   
+    
+    camera_params = np.empty(len(cams) * 9)
+    n_observations = len(tracks) #?? not sure
+    n_points = len(tracks)
+
+    points_3d = np.empty((n_points, 3))
+    points_2d = np.empty((n_observations, 2))
+    camera_indices = np.empty(n_observations, dtype=int)
+    points_2d_indices = np.empty(n_observations, dtype=int)
+
+    for v in range(len(tracks)):
+        track = tracks[v]
+        points_3d[v] = track.pt[:-1]
+        points_2d[v] = track.views[i]
+        camera_indices[v] = i
+        points_2d_indices[v] = len(track.views)
+        
+    for i in range(len(cams)):
+        np.append(camera_params, cams[i])
+
+    return camera_params, points_3d, points_2d, camera_indices, points_2d_indices
