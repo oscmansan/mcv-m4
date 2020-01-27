@@ -29,6 +29,9 @@ import numpy as np
 from scipy.sparse import lil_matrix
 from scipy.optimize import least_squares
 
+import utils as h
+import reconstruction as rc
+
 class PySBA:
     """Python class for Simple Bundle Adjustment"""
 
@@ -134,7 +137,7 @@ class PySBA:
         numPoints = self.points3D.shape[0]
 
         x0 = np.hstack((self.cameraArray.ravel(), self.points3D.ravel()))
-        f0 = self.fun(x0, numCameras, numPoints, self.cameraindices, self.point2DIndices, self.points2D)
+        f0 = self.fun(x0, numCameras, numPoints, self.cameraIndices, self.point2DIndices, self.points2D)
 
         A = self.bundle_adjustment_sparsity(numCameras, numPoints, self.cameraIndices, self.point2DIndices)
 
@@ -146,7 +149,7 @@ class PySBA:
 
         return params, points_3d
 
-def adapt_format_pysba(tracks, cams, i):
+def adapt_format_pysba(tracks, cams):
     """
     Convert the specifications for each variable:
 
@@ -167,24 +170,30 @@ def adapt_format_pysba(tracks, cams, i):
             points_2d with shape (n_observations, 2)
                     contains measured 2-D coordinates of points projected on images in each observations.
         """   
+    camera_params, points_3d, points_2d, camera_indices, points_2d_indices = [], [], [], [], []
     
-    camera_params = np.empty(len(cams) * 9)
-    n_observations = len(tracks) #?? not sure
-    n_points = len(tracks)
-
-    points_3d = np.empty((n_points, 3))
-    points_2d = np.empty((n_observations, 2))
-    camera_indices = np.empty(n_observations, dtype=int)
-    points_2d_indices = np.empty(n_observations, dtype=int)
-
     for v in range(len(tracks)):
-        track = tracks[v]
-        points_3d[v] = track.pt[:-1]
-        points_2d[v] = track.views[i]
-        camera_indices[v] = i
-        points_2d_indices[v] = len(track.views)
-        
+        points_3d.append(tracks[v].pt[:-1])
+        for p in tracks[v].views.keys():
+            points_2d.append(tracks[v].views[p])
+            camera_indices.append(p)
+            points_2d_indices.append(v)
+
     for i in range(len(cams)):
-        np.append(camera_params, cams[i])
+        K,_,_ = rc.KRt_from_P(cams[i])
+        camera_params.append(K)
+
+    camera_params = np.asarray(camera_params)
+    points_3d = np.asarray(points_3d)
+    points_2d = np.asarray(points_2d)
+    camera_indices = np.asarray(camera_indices)
+    points_2d_indices = np.asarray(points_2d_indices)
+
+    if h.debug > 2:
+        print("points_3d", len(points_3d), points_3d)
+        print("camera_params", len(camera_params),camera_params)
+        print("points_2d", len(points_2d) ,points_2d)
+        print("camera_indices", len(camera_indices) ,camera_indices)
+        print("points_2d_indices", len(points_2d_indices) ,points_2d_indices)
 
     return camera_params, points_3d, points_2d, camera_indices, points_2d_indices
