@@ -111,6 +111,7 @@ def main(argv):
                 # refine matches and update the contents of matches
                 xr1, xr2 = fd.refine_matches(x1, x2, F)
                 tk.add_tracks(x1, x2, xr1.T, xr2.T, prev, i, tracks, hs_vs)
+                #h.draw_matches_cv(imgs[prev], imgs[i], x1, x2)
 
                 if h.debug >= 0:
                     print("  Tracks added after matching", prev, "and", i)
@@ -134,7 +135,7 @@ def main(argv):
                 print("  Resection of camera", i, "performed")
 
             # projective triangulation for 3D structure
-            Xprj = rc.estimate_3d_points(cams_pr[i-1], cams_pr[i], xr1, xr2)  # when n>2, Ps and xs don't agree!
+            Xprj = rc.estimate_3d_points(cams_pr[prev], cams_pr[i], xr1, xr2)
             if h.debug >= 0:
                 print('  Projective reconstruction estimated')
 
@@ -144,7 +145,7 @@ def main(argv):
                 print('  Projective 3D points added to tracks')
 
             # TODO compute projective reprojection error
-            error_prj = rc.compute_reproj_error(Xprj, cams_pr[i-1], cams_pr[i], xr1, xr2)
+            error_prj = rc.compute_reproj_error(Xprj, cams_pr[prev], cams_pr[i], xr1, xr2)
             if h.debug > 0:
                 print("    Projective reprojection error:", error_prj)
             
@@ -153,7 +154,7 @@ def main(argv):
             # TODO Estimate homography that makes an affine rectification
             # With the vanishing points, the plane at the infinity is computed. 
             # Then the affine homography is built with the coordinates of the infinity plane
-            aff_hom = ac.estimate_aff_hom(cams_pr[i-1:], vps[i-1:])
+            aff_hom = ac.estimate_aff_hom([cams_pr[prev], cams_pr[i]], [vps[prev], vps[i]])
 
             # TODO Transform 3D points and cameras to affine space
             Xaff, cams_aff = rc.transform(aff_hom, Xprj, cams_pr)
@@ -164,7 +165,7 @@ def main(argv):
                 print('  Affine 3D points added to tracks')
             
             # TODO compute affine reprojection error (reuse your code)
-            error_aff = rc.compute_reproj_error(Xaff, cams_aff[i-1], cams_aff[i], xr1, xr2)
+            error_aff = rc.compute_reproj_error(Xaff, cams_aff[prev], cams_aff[i], xr1, xr2)
             if h.debug > 0:
                 print("    Affine reprojection error:", error_aff)
 
@@ -182,7 +183,7 @@ def main(argv):
                 print('  Euclidean 3D points added to tracks')
             
             # TODO compute metric reprojection error (reuse your code)
-            error_euc = rc.compute_reproj_error(Xeuc, cams_euc[i-1], cams_euc[i], xr1, xr2)
+            error_euc = rc.compute_reproj_error(Xeuc, cams_euc[prev], cams_euc[i], xr1, xr2)
             if h.debug > 0:
                 print("    Euclidean reprojection error:", error_euc)
 
