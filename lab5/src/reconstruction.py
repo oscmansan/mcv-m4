@@ -75,21 +75,36 @@ def resection(tracks, i):
     pts3d, T1 = normalize3dpts(pts3d)
     pts2d, T2 = normalize2dpts(pts2d)
 
-    # DLT algorithm
+    # RANSAC
     n = pts3d.shape[0]
-    A = np.empty((2*n, 12))
-    for i in range(n):
-        X = pts3d[i]
-        x, y, w = pts2d[i]
-        A[2*i, :] = np.concatenate((np.zeros(4), -w*X, y*X))
-        A[2*i+1, :] = np.concatenate((w*X, np.zeros(4), -x*X))
+    max_it = 1000
+    p = 0.999
+    th = 1
+    eps = np.finfo(float).eps
 
-    U, D, Vt = np.linalg.svd(A)
-    p = Vt.T[:, -1]
-    P = p.reshape((3, 4))
+    best_inliers = []
+    it = 0
+    while it < max_it:
+        points = np.random.choice(range(n), 6, replace=False)
+        P = camera_matrix(pts3d[points], pts2d[points])
+
+        d = np.sum((euclid(pts2d)-euclid((P@pts3d.T).T))**2, axis=1)
+        inliers = np.where(d < th)[0]
+
+        if len(inliers) > len(best_inliers):
+            best_inliers = inliers
+
+        fracinliers = len(best_inliers) / n
+        pNoOutliers = 1 - fracinliers**6
+        pNoOutliers = max(eps, pNoOutliers)  # avoid division by -Inf
+        pNoOutliers = min(1 - eps, pNoOutliers)  # avoid division by 0
+        max_it = min(max_it, np.log(1 - p) / np.log(pNoOutliers))
+
+        it += 1
+
+    P = camera_matrix(pts3d[best_inliers], pts2d[best_inliers])
 
     # TODO: minimize geometric error
-    # Note: RANSAC is not needed since points in tracks are inliers
 
     # denormalize P
     P = T2.T @ P @ T1
@@ -99,6 +114,22 @@ def resection(tracks, i):
         print('    Camera Matrix estimated')
     if h.debug > 1:
         print('      Camera Matrix: {}\n'.format(P))
+
+    return P
+
+
+def camera_matrix(pts3d, pts2d):
+    # DLT algorithm
+    A = np.empty((2*6, 12))
+    for i in range(6):
+        X = pts3d[i]
+        x, y, w = pts2d[i]
+        A[2 * i, :] = np.concatenate((np.zeros(4), -w * X, y * X))
+        A[2 * i + 1, :] = np.concatenate((w * X, np.zeros(4), -x * X))
+
+    U, D, Vt = np.linalg.svd(A)
+    p = Vt.T[:, -1]
+    P = p.reshape((3, 4))
 
     return P
 
