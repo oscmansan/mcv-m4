@@ -71,15 +71,11 @@ def resection(tracks, i):
     # convert to homogeneous coordinates
     pts2d = homog(pts2d)
 
-    # normalize points
-    pts3d, T1 = normalize3dpts(pts3d)
-    pts2d, T2 = normalize2dpts(pts2d)
-
     # RANSAC
     n = pts3d.shape[0]
     max_it = 1000
     p = 0.999
-    th = 1
+    th = 1 - np.cos(0.004)
     eps = np.finfo(float).eps
 
     best_inliers = []
@@ -106,10 +102,6 @@ def resection(tracks, i):
 
     # TODO: minimize geometric error
 
-    # denormalize P
-    P = T2.T @ P @ T1
-    P /= P[-1, -1]
-
     if h.debug >= 0:
         print('    Camera Matrix estimated')
     if h.debug > 1:
@@ -119,6 +111,10 @@ def resection(tracks, i):
 
 
 def camera_matrix(pts3d, pts2d):
+    # normalize points
+    pts3d, T1 = normalize3dpts(pts3d)
+    pts2d, T2 = normalize2dpts(pts2d)
+
     # DLT algorithm
     A = np.empty((2*6, 12))
     for i in range(6):
@@ -130,6 +126,10 @@ def camera_matrix(pts3d, pts2d):
     U, D, Vt = np.linalg.svd(A)
     p = Vt.T[:, -1]
     P = p.reshape((3, 4))
+
+    # denormalize P
+    P = T2.T @ P @ T1
+    P /= P[-1, -1]
 
     return P
 
