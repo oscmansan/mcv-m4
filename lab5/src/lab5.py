@@ -140,7 +140,7 @@ def main(argv):
                 print('  Projective reconstruction estimated')
 
             # TODO Add estimated 3d projective points to tracks
-            tk.add_pts_tracks(Xprj, x1, x2, tracks, hs_vs)
+            tk.add_pts_tracks(Xprj, x1, x2, prev, i, tracks, hs_vs)
             if h.debug >= 0:
                 print('  Projective 3D points added to tracks')
 
@@ -163,7 +163,7 @@ def main(argv):
             Xaff, cams_aff = rc.transform(aff_hom, Xprj, cams_pr)
 
             # TODO Add estimated 3d affine points to tracks (reuse your code)
-            tk.add_pts_tracks(Xaff, x1, x2, tracks, hs_vs)
+            tk.add_pts_tracks(Xaff, x1, x2, prev, i, tracks, hs_vs)
             if h.debug >= 0:
                 print('  Affine 3D points added to tracks')
             
@@ -184,7 +184,7 @@ def main(argv):
             Xeuc, cams_euc = rc.transform(euc_hom, Xaff, cams_aff)
 
             # TODO Add estimated 3d euclidean points to tracks (reuse your code)
-            tk.add_pts_tracks(Xeuc, x1, x2, tracks, hs_vs)
+            tk.add_pts_tracks(Xeuc, x1, x2, prev, i, tracks, hs_vs)
             if h.debug >= 0:
                 print('  Euclidean 3D points added to tracks')
             
@@ -200,15 +200,15 @@ def main(argv):
             # TODO Adapt cameras and 3D points to PySBA format
             cams_ba, X_ba, x_ba, cam_idxs, x_idxs = ba.adapt_format_pysba(tracks, cams_euc)
             badj = ba.PySBA(cams_ba, X_ba, x_ba, cam_idxs, x_idxs)
-            cams_ba, Xeuc_ba = badj.bundleAdjust()
+            cams_ba, Xba = badj.bundleAdjust()
             # TODO Update 3D points and tracks with optimised cameras and points
-            # tk.update_ba_pts_tracks(Xeuc, tracks)
+            tk.update_ba_pts_tracks(Xba, x1, x2, prev, i, tracks, hs_vs)
             if h.debug >= 0:
                 print("  Bundle Adjustment performed over", i, "images")
 
             # render results
             if h.debug_display:
-                h.display_3d_points(Xeuc_ba[:, :3])
+                h.display_3d_points(Xba[:, :3])
 
     if h.debug >= 0:
         print("Structure from Motion applied on sequence of", n, "images")

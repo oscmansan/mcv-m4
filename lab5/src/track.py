@@ -10,7 +10,7 @@ class Track:
         self.ref_views = {}  # dictionary: {#cam, 2d point}. Refined views according to F
         self.views[img] = view
         self.ref_views[img] = rview
-        hs_vs[view] = self 
+        hs_vs[(view, img)] = self
 
         self.pt = np.zeros(4, dtype=np.float32)
         if pt is not None:
@@ -23,7 +23,7 @@ class Track:
         #    print("refined view[",key,"]: ", rview)
         if hs_vs is not None:
             # The addition to the hash table is done here
-            hs_vs[view] = self 
+            hs_vs[(view, img)] = self
             if h.debug > 2:
                 print("    hs_vs added to Track")
 
@@ -83,8 +83,8 @@ def add_tracks(xi, xj, xri, xrj, i, j, tracks, hs_vs):
     for fi, fj, rfi, rfj in zip(xi, xj, xri, xrj):
         tfi = tuple(fi)
         tfj = tuple(fj)
-        fi_is_v = (tfi in hs_vs)
-        fj_is_v = (tfj in hs_vs)
+        fi_is_v = ((tfi, i) in hs_vs)
+        fj_is_v = ((tfj, j) in hs_vs)
 
         #print ("tfi:",tfi)
         #print ("tfj:",tfj)
@@ -109,33 +109,33 @@ def add_tracks(xi, xj, xri, xrj, i, j, tracks, hs_vs):
                     print("refined view[", key, "]: ", rview)
         elif not fi_is_v: 
             # retrieve the view and add the orphan to it and to the hash table
-            v = hs_vs[tfj]
+            v = hs_vs[(tfj, j)]
             v.add_view(tfi, tuple(rfi), i, hs_vs)
             if h.debug > 2:
                 print("view 1 added")
         elif not fj_is_v: 
             # retrieve the view and add the orphan to it and to the hash table
-            v = hs_vs[tfi]
+            v = hs_vs[(tfi, i)]
             v.add_view(tfj, tuple(rfj), j, hs_vs)
             if h.debug > 2:
                 print("view 2 added")
         else:
             # both are in hash table
-            if hs_vs[tfi] is not hs_vs[tfj]: 
+            if hs_vs[(tfi, i)] is not hs_vs[(tfj, j)]:
                 # They are different tracks: merge their views into one and update the hash table
-                v = hs_vs[tfi]
-                w = hs_vs[tfj]
+                v = hs_vs[(tfi, i)]
+                w = hs_vs[(tfj, j)]
                 if v.views.keys() > w.views.keys():
                     # The smaller is added to the bigger
                     v.merge(w)
-                    for tfk in w.views.values():
-                        hs_vs[tfk] = v
+                    for k, tfk in w.views.items():
+                        hs_vs[(tfk, k)] = v
                     if h.debug > 2:
                         print("view 2 merged into 1")
                 else:
                     w.merge(v)
-                    for tfk in v.views.values():
-                        hs_vs[tfk] = w
+                    for k, tfk in v.views.items():
+                        hs_vs[(tfk, k)] = w
                     if h.debug > 2:
                         print("view 1 merged into 2")
 
@@ -144,13 +144,13 @@ def add_tracks(xi, xj, xri, xrj, i, j, tracks, hs_vs):
             #    v.add_view(tfj, tuple(rfj), j)
 
 
-def add_pts_tracks(X, x1, x2, tracks, hs_vs):
-    for pt, v, w in zip(X.T, x1, x2):
-        t1 = hs_vs[tuple(v)]
-        t2 = hs_vs[tuple(w)]
+def add_pts_tracks(X, xi, xj, i, j, tracks, hs_vs):
+    for pt, fi, fj in zip(X.T, xi, xj):
+        t1 = hs_vs[(tuple(fi), i)]
+        t2 = hs_vs[(tuple(fj), j)]
         assert (t1 is t2)
         t1.pt = pt
 
-def update_ba_pts_tracks(Xba, tracks):
-    for v in range(len(tracks)):
-        tracks[v].pt = Xba.T[v]
+
+def update_ba_pts_tracks(Xba, xi, xj, i, j, tracks, hs_vs):
+    add_pts_tracks(Xba, xi, xj, i, j, tracks, hs_vs)
