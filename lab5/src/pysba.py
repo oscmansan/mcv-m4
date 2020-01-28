@@ -26,6 +26,7 @@ http://scipy-cookbook.readthedocs.io/items/bundle_adjustment.html
 """
 
 import numpy as np
+import cv2
 from scipy.sparse import lil_matrix
 from scipy.optimize import least_squares
 
@@ -173,15 +174,18 @@ def adapt_format_pysba(tracks, cams):
     camera_params, points_3d, points_2d, camera_indices, points_2d_indices = [], [], [], [], []
     
     for v in range(len(tracks)):
-        points_3d.append(tracks[v].pt[:-1])
+        points_3d.append(tracks[v].pt[:-1] / tracks[v].pt[-1])
         for p in tracks[v].views.keys():
             points_2d.append(tracks[v].views[p])
             camera_indices.append(p)
             points_2d_indices.append(v)
 
     for i in range(len(cams)):
-        K,_,_ = rc.KRt_from_P(cams[i])
-        camera_params.append(K)
+        K,R_mat,t = rc.KRt_from_P(cams[i])
+        R_vec =  np.squeeze(cv2.Rodrigues(R_mat)[0])
+        f = [K[1,1]]
+        p = [0,0] #there is no distortion
+        camera_params.append(np.concatenate([R_vec,t,f,p]))
 
     camera_params = np.asarray(camera_params)
     points_3d = np.asarray(points_3d)
