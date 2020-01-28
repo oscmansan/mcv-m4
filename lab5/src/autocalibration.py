@@ -10,7 +10,6 @@ def estimate_aff_hom(cams, vps):
 
     # compute plane at infinity
     p = mth.nullspace(V.T)
-    print('p:',p)
     p = p / p[3, :]
 
     # compute homography
