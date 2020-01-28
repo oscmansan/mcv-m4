@@ -159,8 +159,7 @@ def main(argv):
             aff_hom = ac.estimate_aff_hom([cams_pr[prev], cams_pr[i]], [vps[prev], vps[i]])
 
             # TODO Transform 3D points and cameras to affine space
-            Xaff, cams = rc.transform(aff_hom, Xprj, cams_pr)
-            cams_aff.append(cams)
+            Xaff, cams_aff = rc.transform(aff_hom, Xprj, cams_pr)
 
             # TODO Add estimated 3d affine points to tracks (reuse your code)
             tk.add_pts_tracks(Xaff, x1, x2, tracks, hs_vs)
@@ -180,8 +179,7 @@ def main(argv):
             # squared pixels. Then perform the transformation to Euclidean space
             # (reuse your code)
             euc_hom = ac.estimate_euc_hom(cams_aff[prev], vps[prev])
-            Xeuc, cams = rc.transform(euc_hom, Xaff, cams_aff)
-            cams_euc.append(cams)
+            Xeuc, cams_euc = rc.transform(euc_hom, Xaff, cams_aff)
 
             # TODO Add estimated 3d euclidean points to tracks (reuse your code)
             tk.add_pts_tracks(Xeuc, x1, x2, tracks, hs_vs)
