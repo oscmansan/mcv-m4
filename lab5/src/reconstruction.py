@@ -123,8 +123,7 @@ def camera_matrix(pts3d, pts2d):
         A[2 * i, :] = np.concatenate((np.zeros(4), -w * X, y * X))
         A[2 * i + 1, :] = np.concatenate((w * X, np.zeros(4), -x * X))
 
-    U, D, Vt = np.linalg.svd(A)
-    p = Vt.T[:, -1]
+    p = mth.nullspace(A)
     P = p.reshape((3, 4))
 
     # denormalize P

@@ -1,4 +1,5 @@
 import numpy as np
+import scipy
 import reconstruction as rc
 import maths as mth
 import fundamental as fd
@@ -42,13 +43,9 @@ def estimate_euc_hom(cams, vps):
                   [w_v[1], w_v[3], w_v[4]],
                   [w_v[2], w_v[4], w_v[5]]])
 
-    # obtain K
-    K = np.linalg.cholesky(np.linalg.inv(w))
-
     # obtain A
     M = cams[:, :3]
-    Z = np.linalg.inv(M.T@w@M)
-    A = np.linalg.cholesky(Z)
+    A = scipy.linalg.cholesky(np.linalg.inv(M.T@w@M), lower=False)
 
     # build euc_hom
     euc_hom = np.r_[
