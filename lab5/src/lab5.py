@@ -39,7 +39,7 @@ def main(argv):
     cams_pr = []     # list of projective cameras
     cams_aff = []    # list of affine cameras
     cams_euc = []    # list of euclidean cameras
-    Xpr = []         # list of projective 3d points
+    Xprj = []         # list of projective 3d points
     Xaff = []        # list of affine 3d points
     Xeuc = []        # list of euclidean 3d points
 
@@ -148,6 +148,8 @@ def main(argv):
             error_prj = rc.compute_reproj_error(Xprj, cams_pr[prev], cams_pr[i], xr1, xr2)
             if h.debug > 0:
                 print("    Projective reprojection error:", error_prj)
+
+            h.display_3d_points(Xprj.T[:, :3])
             
             # Affine rectification
             vps.append(vp.estimate_vps(imgs[i]))
@@ -157,7 +159,8 @@ def main(argv):
             aff_hom = ac.estimate_aff_hom([cams_pr[prev], cams_pr[i]], [vps[prev], vps[i]])
 
             # TODO Transform 3D points and cameras to affine space
-            Xaff, cams_aff = rc.transform(aff_hom, Xprj, cams_pr)
+            Xaff, cams = rc.transform(aff_hom, Xprj, cams_pr)
+            cams_aff.append(cams)
 
             # TODO Add estimated 3d affine points to tracks (reuse your code)
             tk.add_pts_tracks(Xaff, x1, x2, tracks, hs_vs)
@@ -169,13 +172,16 @@ def main(argv):
             if h.debug > 0:
                 print("    Affine reprojection error:", error_aff)
 
+            h.display_3d_points(Xaff.T[:, :3])
+
             # Metric rectification
             # TODO Perform Metric rectification. First compute the transforming
             # homography from vanishing points and the camera constrains skew = 0,
             # squared pixels. Then perform the transformation to Euclidean space
             # (reuse your code)
-            euc_hom = ac.estimate_euc_hom(cams_aff[i], vps[i])
-            Xeuc, cams_euc = rc.transform(euc_hom, Xaff, cams_aff)
+            euc_hom = ac.estimate_euc_hom(cams_aff[prev], vps[prev])
+            Xeuc, cams = rc.transform(euc_hom, Xaff, cams_aff)
+            cams_euc.append(cams)
 
             # TODO Add estimated 3d euclidean points to tracks (reuse your code)
             tk.add_pts_tracks(Xeuc, x1, x2, tracks, hs_vs)
@@ -187,8 +193,9 @@ def main(argv):
             if h.debug > 0:
                 print("    Euclidean reprojection error:", error_euc)
 
+            h.display_3d_points(Xeuc.T[:, :3])
+
             # Bundle Adjustment
-            
             # TODO Adapt cameras and 3D points to PySBA format
             cams_ba, X_ba, x_ba, cam_idxs, x_idxs = ba.adapt_format_pysba(tracks, cams_euc)
             badj = ba.PySBA(cams_ba, X_ba, x_ba, cam_idxs, x_idxs)
@@ -200,7 +207,6 @@ def main(argv):
 
             # render results
             if h.debug_display:
-                h.display_3d_points(Xeuc.T[:, :3])
                 h.display_3d_points(Xeuc_ba[:, :3])
 
     if h.debug >= 0:
