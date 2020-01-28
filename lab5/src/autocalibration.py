@@ -10,6 +10,7 @@ def estimate_aff_hom(cams, vps):
 
     # compute plane at infinity
     p = mth.nullspace(V.T)
+    print('p:',p)
     p = p / p[3, :]
 
     # compute homography
@@ -43,11 +44,12 @@ def estimate_euc_hom(cams, vps):
                   [w_v[2], w_v[4], w_v[5]]])
 
     # obtain K
-    K = np.linalg.inv(np.linalg.cholesky(w))
+    K = np.linalg.cholesky(np.linalg.inv(w))
 
     # obtain A
     M = cams[:, :3]
-    A = np.linalg.cholesky(np.linalg.inv(M.T@w@M))
+    Z = np.linalg.inv(M.T@w@M)
+    A = np.linalg.cholesky(Z)
 
     # build euc_hom
     euc_hom = np.r_[
