@@ -150,29 +150,17 @@ class PySBA:
 
         return params, points_3d
 
+
 def adapt_format_pysba(tracks, cams):
-    """
-    Convert the specifications for each variable:
+    camera_params = []
+    for i in range(len(cams)):
+        K, R, t = rc.KRt_from_P(cams[i])
+        r = np.squeeze(cv2.Rodrigues(R)[0])
+        f = (K[1, 1] + K[2, 2]) / 2
+        k1, k2 = 0, 0  # assume no distortion
+        camera_params.append(np.concatenate((r, t, [f, k1, k2])))
 
-            cameraArray with shape (n_cameras, 9) contains initial estimates of parameters for all cameras.
-                    First 3 components in each row form a rotation vector,
-                    next 3 components form a translation vector,
-                    then a focal distance and two distortion parameters.
-
-            points_3d with shape (n_points, 3)
-                    contains initial estimates of point coordinates in the world frame.
-
-            camera_ind with shape (n_observations,)
-                    contains indices of cameras (from 0 to n_cameras - 1) involved in each observation.
-
-            point_ind with shape (n_observations,)
-                    contains indices of points (from 0 to n_points - 1) involved in each observation.
-
-            points_2d with shape (n_observations, 2)
-                    contains measured 2-D coordinates of points projected on images in each observations.
-        """   
-    camera_params, points_3d, points_2d, camera_indices, points_2d_indices = [], [], [], [], []
-    
+    points_3d, points_2d, camera_indices, points_2d_indices = [], [], [], []
     for v in range(len(tracks)):
         points_3d.append(tracks[v].pt[:-1] / tracks[v].pt[-1])
         for p in tracks[v].views.keys():
@@ -180,24 +168,17 @@ def adapt_format_pysba(tracks, cams):
             camera_indices.append(p)
             points_2d_indices.append(v)
 
-    for i in range(len(cams)):
-        K,R_mat,t = rc.KRt_from_P(cams[i])
-        R_vec =  np.squeeze(cv2.Rodrigues(R_mat)[0])
-        f = [K[1,1]]
-        p = [0,0] #there is no distortion
-        camera_params.append(np.concatenate([R_vec,t,f,p]))
-
-    camera_params = np.asarray(camera_params)
-    points_3d = np.asarray(points_3d)
-    points_2d = np.asarray(points_2d)
-    camera_indices = np.asarray(camera_indices)
-    points_2d_indices = np.asarray(points_2d_indices)
+    camera_params = np.array(camera_params)
+    points_3d = np.array(points_3d)
+    points_2d = np.array(points_2d)
+    camera_indices = np.array(camera_indices)
+    points_2d_indices = np.array(points_2d_indices)
 
     if h.debug > 2:
         print("points_3d", len(points_3d), points_3d)
-        print("camera_params", len(camera_params),camera_params)
-        print("points_2d", len(points_2d) ,points_2d)
-        print("camera_indices", len(camera_indices) ,camera_indices)
-        print("points_2d_indices", len(points_2d_indices) ,points_2d_indices)
+        print("camera_params", len(camera_params), camera_params)
+        print("points_2d", len(points_2d), points_2d)
+        print("camera_indices", len(camera_indices), camera_indices)
+        print("points_2d_indices", len(points_2d_indices), points_2d_indices)
 
     return camera_params, points_3d, points_2d, camera_indices, points_2d_indices

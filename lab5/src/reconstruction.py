@@ -163,9 +163,10 @@ def normalize3dpts(pts):
 
 
 def KRt_from_P(P):
-    '''
-    Factorize the camera matrix into K,R,t as P = K[R|t].
-    '''
+    """
+    Factorize the camera matrix into K,R,t as P = K[R|t]
+    """
+
     K, R = RQ_factorization(P[:, :3])
 
     # ensure K has positive diagonal
@@ -184,10 +185,11 @@ def KRt_from_P(P):
 
 
 def RQ_factorization(A):
-    '''
+    """
     Decompose a matrix into a triangular times rotation.(from PCV)
-    '''
+    """
+
     Q, R = np.linalg.qr(np.flipud(A).T)
     R = np.flipud(R.T)
     Q = Q.T
-    return R[:,::-1], Q[::-1,:]
+    return R[:, ::-1], Q[::-1, :]

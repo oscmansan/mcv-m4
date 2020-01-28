@@ -148,7 +148,7 @@ def main(argv):
             error_prj = rc.compute_reproj_error(Xprj, cams_pr[prev], cams_pr[i], xr1, xr2)
             if h.debug > 0:
                 print("    Projective reprojection error:", error_prj)
-            
+
             if h.debug_display:
                 h.display_3d_points(Xprj.T[:, :3])
             
@@ -202,7 +202,7 @@ def main(argv):
             badj = ba.PySBA(cams_ba, X_ba, x_ba, cam_idxs, x_idxs)
             cams_ba, Xeuc_ba = badj.bundleAdjust()
             # TODO Update 3D points and tracks with optimised cameras and points
-            tk.update_ba_pts_tracks(Xeuc, tracks)
+            # tk.update_ba_pts_tracks(Xeuc, tracks)
             if h.debug >= 0:
                 print("  Bundle Adjustment performed over", i, "images")
 
