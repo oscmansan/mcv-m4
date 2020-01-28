@@ -148,8 +148,9 @@ def main(argv):
             error_prj = rc.compute_reproj_error(Xprj, cams_pr[prev], cams_pr[i], xr1, xr2)
             if h.debug > 0:
                 print("    Projective reprojection error:", error_prj)
-
-            h.display_3d_points(Xprj.T[:, :3])
+            
+            if h.debug_display:
+                h.display_3d_points(Xprj.T[:, :3])
             
             # Affine rectification
             vps.append(vp.estimate_vps(imgs[i]))
@@ -171,7 +172,8 @@ def main(argv):
             if h.debug > 0:
                 print("    Affine reprojection error:", error_aff)
 
-            h.display_3d_points(Xaff.T[:, :3])
+            if h.debug_display:
+                h.display_3d_points(Xaff.T[:, :3])
 
             # Metric rectification
             # TODO Perform Metric rectification. First compute the transforming
@@ -191,7 +193,8 @@ def main(argv):
             if h.debug > 0:
                 print("    Euclidean reprojection error:", error_euc)
 
-            h.display_3d_points(Xeuc.T[:, :3])
+            if h.debug_display:
+                h.display_3d_points(Xeuc.T[:, :3])
 
             # Bundle Adjustment
             # TODO Adapt cameras and 3D points to PySBA format
@@ -199,7 +202,7 @@ def main(argv):
             badj = ba.PySBA(cams_ba, X_ba, x_ba, cam_idxs, x_idxs)
             cams_ba, Xeuc_ba = badj.bundleAdjust()
             # TODO Update 3D points and tracks with optimised cameras and points
-            # tk.update_ba_pts_tracks(Xeuc, tracks)
+            tk.update_ba_pts_tracks(Xeuc, tracks)
             if h.debug >= 0:
                 print("  Bundle Adjustment performed over", i, "images")
 

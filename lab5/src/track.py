@@ -150,3 +150,7 @@ def add_pts_tracks(X, x1, x2, tracks, hs_vs):
         t2 = hs_vs[tuple(w)]
         assert (t1 is t2)
         t1.pt = pt
+
+def update_ba_pts_tracks(Xba, tracks):
+    for v in range(len(tracks)):
+        tracks[v].pt = Xba.T[v]
