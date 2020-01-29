@@ -1,6 +1,7 @@
 import numpy as np
 
 import utils as h
+import reconstruction as rc
 
 
 class Track:
@@ -153,4 +154,4 @@ def add_pts_tracks(X, xi, xj, i, j, tracks, hs_vs):
 
 
 def update_ba_pts_tracks(Xba, xi, xj, i, j, tracks, hs_vs):
-    add_pts_tracks(Xba, xi, xj, i, j, tracks, hs_vs)
+    add_pts_tracks(rc.homog(Xba).T, xi, xj, i, j, tracks, hs_vs)

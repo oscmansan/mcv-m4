@@ -98,6 +98,9 @@ def resection(tracks, i):
 
         it += 1
 
+    if len(best_inliers) < 6:
+        raise ValueError('There must be at least 6 inliers to compute the camera matrix.')
+
     P = camera_matrix(pts3d[best_inliers], pts2d[best_inliers])
 
     # TODO: minimize geometric error
@@ -123,7 +126,8 @@ def camera_matrix(pts3d, pts2d):
         A[2 * i, :] = np.concatenate((np.zeros(4), -w * X, y * X))
         A[2 * i + 1, :] = np.concatenate((w * X, np.zeros(4), -x * X))
 
-    p = mth.nullspace(A)
+    u, s, vh = np.linalg.svd(A)
+    p = vh.T[:, -1]
     P = p.reshape((3, 4))
 
     # denormalize P
